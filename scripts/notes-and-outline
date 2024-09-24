@@ -5,6 +5,68 @@ General notes and outline
 3. multimetric calculations 
 
 Data examples and assignments. 
-AMD data as in class example
+AMD data as in class example -- maybe just animas?
 Las Animas data for assignment
 
+Animas
+2 main analyses
+pairwise comparisons
+longitudinal 
+
+Pairwise (ref, impact):
+A68, A72
+A73EC, A73
+A75CC, A75D
+
+Longitudinal
+A55, A60, A68 | A72, A73, A75D
+
+Need to get data in order
+  sheet 1 = upstream reference site A55
+  sheet 2 = taxonomy
+  sheet 3 = all other data
+    A60, A68, A72, A73, A73EC, A75D, A75CC
+
+2. simple metrics - Richness
+Heptageniidae richness
+Ephemerellidae Richness
+Taeniopterygidae
+Orthocladiinae
+EPT
+Taxa
+
+Other simple metrics from biotype 1
+non-insect percentage (abundance / total abundance)
+number of clinger taxa
+percent EPT no Baetidae
+
+3. take metrics from MMI
+Plug into specific 
+
+
+proposed outline, just animas data
+Show data in class
+read in first "sheet" which has data from one site
+read in second sheet which has taxa information
+join data
+calculate simple metrics
+  total taxa richness
+  Ephemeroptera richness
+  Family richness
+  % ephemeroptera
+  Number of clinger taxa
+  
+third sheet has info for all sites
+Read that in, bind_rows with first sheet, then join
+Group data by site and repeat calcs above
+Plot results 
+  filter to show paired sites; add "ref" and "impaired"
+  filter to show longitudinal sites, and plot in order
+
+Assignment 1) calculate all simple metrics
+
+Lecture - CO's MMI
+data day - calculate some of the metrics and plug into MMI equations
+Show averages or site specific MMI calculations, but only using coupld of MMIs calculated above
+
+Assignment 2) calculate MMI metrics for all indices. Calculate averages
