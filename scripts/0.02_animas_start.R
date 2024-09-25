@@ -2,12 +2,23 @@
 library(readxl)
 library(tidyverse)
 
+# single metrics
+# Richness, count of taxa present
+# 1. species richness
+# 2. EPT Richness (together and separate)
+# diversity
+# 3. Shannon diversity
+# proportion of individuals
+# 4. % E individuals (number / tot_n)
+# 5. % Chironomidae individuals (number / tot_n)
+# 6. % scraper individuals
+
 A75CC <- read_excel("data/MMI_HW_data.xlsx", sheet = 1)
-a72 <- read_excel("data/MMI_HW_data.xlsx", sheet = "A72")
+other <- read_excel("data/MMI_HW_data.xlsx", sheet = "other_sites")
 taxa_info <- read_excel("data/MMI_HW_data.xlsx", sheet = "taxa_info")
 site_info <- read_excel("data/MMI_HW_data.xlsx", sheet = "site_info")
 
-sort(setdiff(A75CC$Taxon, taxa_info$Taxon))
+sort(setdiff(other$Taxon, taxa_info$Taxon))
 
 a75cc <- left_join(A75CC, site_info)
 a75cc <- left_join(a75cc, taxa_info)
@@ -65,19 +76,30 @@ dat2 <- left_join(dat2, taxa_info)
 full_join(tot_rich, hept_rich)
 
 dat2 %>%
-  group_by(site_code, Order) %>%
+  group_by(site_code, impact_category,Order) %>%
   distinct(Taxon) |>
   summarize(n_order = n()) |>
-  ggplot(aes(y = n_order, x = Order, fill = site_code)) +
+  ggplot(aes(y = n_order,
+             x = Order,
+             fill = impact_category,
+             group = site_code)) +
   geom_bar(stat = "identity",
            position = position_dodge2(preserve = "single"))
 
 
 dat2|>
-  select(site_code, Taxon, Count) |>
-  group_by(site_code) %>%
+  select(site_code,
+         Taxon,
+         Count,
+         impact_category) |>
+  group_by(site_code, impact_category) %>%
   mutate(tot_n = sum(Count),
          pi = Count / tot_n,
          ln_pi = log(pi),
          pi_ln_pi = pi*ln_pi) |>
-  summarize(H = -sum(pi_ln_pi))
+  summarize(H = -sum(pi_ln_pi)) |>
+  ggplot(aes(y = H,
+             x = site_code,
+             fill = impact_category)) +
+  geom_bar(stat = "identity",
+           position = position_dodge2(preserve = "single"))

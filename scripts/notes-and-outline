@@ -72,3 +72,6 @@ data day - calculate some of the metrics and plug into MMI equations
 Show averages or site specific MMI calculations, but only using coupld of MMIs calculated above
 
 Assignment 2) calculate MMI metrics for all indices. Calculate averages
+
+## Scope, ABT
+Community data is complex and multifaceted. A list of species becomes a list of orders, FFGs, presence/absence, abundance, proportions, etc. We can perform these analyses in Excel (examples) but it is prone to errors and can be tedious. Therefore, we are going to learn statistical and data analysis software to make our jobs easier in the long run. Learning this language has a steep learning curve, but it is an extremely useful skill that is worth your time to learn. Every minute spent learning this can save you many minutes, if not hours, in the future. Be kind to your future selves and spend time learning this now. 

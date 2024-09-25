@@ -1,0 +1,275 @@
+---
+title: "Single metrics"
+author: "Justin Pomeranz"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(tidyverse)
+
+site1 <- read_excel(here::here("data/MMI_HW_data.xlsx"),
+                    sheet = "A75CC")
+taxa_info <- read_excel(here::here("data/MMI_HW_data.xlsx"),
+                        sheet = "taxa_info")
+```
+
+## Overview  
+
+This tutorial will show how to calculate simple biomonitoring metrics from community data. It will begin with analyzing data form a single site, and then we will look at calculating individual metrics for multiple sites at a time.  
+
+## Introduction  
+
+Community data is multifaceted and complex; a simple list of taxa can be expanded to include information on taxonomy and systematics, as well as trait data such as functional feeding groups (FFG), modes of existence, pollution tolerance, life history attributes, in addition to others. 
+
+Typically, metrics are organized into a few categories such as:
+1) Structural  
+2) Composition  
+3) Life history  
+
+Analyzing data in spreadsheet software such as Microsoft Excel is not overly difficult, although it can be tedious and error-prone. Most frustratingly, it can be extremely difficult to proofread and find/correct errors in excel formulas. These difficulties are compounded when trying to analyze data from multiple sites at once, which is a typical demand of biomonitoring studies. 
+
+For this reason, we will be learning the data and statistical language called R. Learning R, like learning any new language, is time-consuming and can be quite difficult, especially at the beginning. However, this is an important skill which is increasingly in demand in the job market. Every minute you spend learning it now will likely save you many minutes if not hours in the future, so it is well worth your time. 
+
+As they say in Australia:
+> Don't be so busy digging a hole with a spoon that you don't take the time to go and get a shovel.
+
+
+Be kind to your future self and take the time to learn how to use a shovel now. 
+
+## Data  
+
+We are going to be working with data collected by [Mountain Studies Institute](https://www.mountainstudies.org/) after the [2015 Gold King Mine](https://en.wikipedia.org/wiki/2015_Gold_King_Mine_waste_water_spill) spill into the Animas River.
+
+You can find the data stored in an excel workbook on the D2L site for our course. The data is called `MMI_HW_data.xlsx`  
+
+### Data structure  
+
+Once you download the data, open up the workbook to see how it's organized. The workbook has four sheets in it:
+1) `A75CC`  
+  * Macroinvertebrate community data from a single site  
+2) `taxa_info`  
+  * This sheet has taxonomic, FFG, and habit information for all taxa in the complete data set.  
+  
+3) `other_sites` 
+  * This sheet has macroinvertebrate community data for all other sites that MSI sampled that we will be looking at for this tutorial and the associated homework assignment.  
+  
+4) `site_info`  
+  * This last sheet has information on the sites (one row per site) which includes the site_code, site name, what river it's located on, the distance downstream (for Animas River sites only), and the impact category (reference or impacted)  
+  
+## R  
+
+You should have already downloaded R and RStudio (in that order) on your personal laptops, or you are using a departmental computer which has it downloaded already. 
+
+Either way, we need to prepare the workspace before we bgein.  
+
+* Start by opening Rstudio  
+* Follow along in class to create a project called `ENVS337`  
+  * If you missed class, there should be a panopto recording of how to do this  
+  * Or, you can watch [this video](https://jpomz.github.io/ENVS396-FA-2024/lessons/Introduction-to-course/) from a related course explaining the process. 
+  
+* In your console, copy and run the following lines of code. Note that you only need to do this **once** per machine.  
+  * install.packages("tidyverse")  
+  * install.packages("readxl")  
+  
+* Once this is done, open a new script and put the following lines of code at the top. 
+
+```{r, eval=FALSE}
+library(readxl)
+library(tidyverse)
+```
+
+* You run the individual lines of code by putting your cursor on the line and then pressing `ctrl` + `enter`  
+* You must run the `library()` commands **every time you open Rstudio**  
+* The `library()` commands make the functions within those packages available to use in your RStudio session  
+
+## Getting the data into R  
+
+* Make sure you have a `data/` folder in your RStudio project and put the `MMI_HW_data.xlsx` file in that folder.  
+* Each of the four excel sheets will need to be read into R separately.  
+* For now, we will just start with the data from site `A75CC` and the `taxa_info`.  
+
+```{r, eval=FALSE}
+site1 <- read_excel("data/MMI_HW_data.xlsx",
+                    sheet = "A75CC") 
+taxa_info <- read_excel("data/MMI_HW_data.xlsx",
+                        sheet = "taxa_info")
+```
+
+* Look at the first few rows of data by putting it in the `head()` function  
+
+```{r}
+head(site1)
+head(taxa_info)
+```
+
+* We will now "join" the two objects together this way  
+```{r}
+site_taxa <- left_join(site1, taxa_info)
+head(site_taxa)
+```
+
+## Simple metrics  
+
+## Taxa metrics  
+
+### Total Richness  
+
+* Let's first calculate a very simple structural metric: the richness or number of taxa  
+
+
+```{r}
+site_taxa|>
+  distinct(site_code, Taxon) |>
+  group_by(site_code) |>
+  summarize(tot_rich = n())
+```
+* the above code starts with our data object, `site_taxa`.  
+* then , it looks at all the `distinct()` taxa within each site_code in the data  
+  * This is actually an extra step because there are no repeated taxa in this object, and there's only one site  
+  * However, it's a good idea to do that just in case, especially later when we have many sites to look at at one time.  
+  
+* then, it summarizes (`summarize()`) the data by counting (`n()`) the number of rows in it.  
+
+* notice that the `|>` (also sometimes shown as a `%>%`) is a special operator called a pipe.  
+  * whenever I see a pipe, I say the word "then".  
+  
+* When we do that, R runs the functions and prints the result to the console, but it's not actually saved anywhere  
+* to save it, we need to give it a name and use the assign operator (`<-`)  
+  * The shortcut for the assign operator is `alt` + `-`
+  
+```{r}
+total_rich <- site_taxa|>
+  distinct(site_code, Taxon) |>
+  group_by(site_code) |>
+  summarize(tot_rich = n())
+
+total_rich
+```
+### Ephemeroptera Richness  
+
+* Now we will do another common metric, which is just a slight bit harder to calculate: the number of Ephemeroptera taxa  
+* We will use much of the same code as before, but first we need to "filter" the data so that only the Ephemeroptera are present  
+
+```{r}
+site_taxa %>%
+  filter(Order == "Ephemeroptera")
+```
+* The `filter()` command looks for rows inside of the `Order` column which are equal to `"Ephemeroptera"`.  
+  * Note the two equals signs: `==`  
+  * read this as "is equal to" 
+  * one equal sign is read as "equals", i.e., you are telling it that x = y  
+  * Another important filter command is `!=` which can be read as "is not equal to".  
+  
+* For example, let's say we wanted everything *except* Ephemeroptera, we would write this:
+
+```{r}
+site_taxa %>%
+  filter(Order != "Ephemeroptera")
+```
+* back to the Ephermoptera richness... 
+```{r}
+site_taxa %>%
+  filter(Order == "Ephemeroptera")
+```
+* This gives us all the rows where the order is equal to Ephemeroptera  
+* Now we can take our code from earlier and add it to get the final result  
+
+```{r}
+ephem_rich <- site_taxa %>%
+  filter(Order == "Ephemeroptera") |>
+  distinct(site_code, Taxon) |>
+  group_by(site_code) |>
+  summarize(E_rich = n())
+ephem_rich
+```
+* Now we have two separate results, so let's combine them together.  
+
+```{r}
+single_results <- left_join(total_rich, ephem_rich)
+single_results
+```
+
+### EPT richness  
+
+* Let's make this a little more complex and calculate the EPT richness.  
+* We've already seen how to filter out the rows where `Order == "Ephemeroptera"`, but now we need an "OR" statement to include the other 2 orders.  
+* inside of `filter()`, you can use a `|` as an OR statement  
+
+```{r}
+site_taxa %>%
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera")
+```
+* Now we have both the mayflies and stoneflies, and we can get the caddisflies with one more or (`|`) statement  
+
+```{r}
+site_taxa %>%
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera" |
+           Order == "Trichoptera")
+```
+
+* And adding the other code to get the count  
+
+```{r}
+ept_rich <- site_taxa %>%
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera" |
+           Order == "Trichoptera") |>
+  distinct(site_code, Taxon) |>
+  group_by(site_code) |>
+  summarize(EPT_rich = n())
+ept_rich
+```
+* And we can combine it with our previous results  
+
+```{r}
+single_results <- left_join(single_results, ept_rich)
+single_results
+```
+> Work on single metric assignments problem 1  
+
+## Shannon Diversity  
+
+* Shannon Diversity is a way of measuring the number of taxa based on the proportion of individuals in that taxa that make up the community  
+* it is calculated with the following formula  
+
+$$ H = -\sum p_i \log p_i$$
+Where $p_i$ is the proportion of individuals in taxa $i$.  
+
+* This equation might look daunting, but it's actually fairly easy to calculate in R  
+* We will learn a new data manipulation verb called `mutate()` which adds columns to our data.  
+* We already have the `Count` of individuals by taxa, but in order to calculate a proportion we need the total number of individuals  
+* first, I'm going to also use another verb called `select()` to limit the number of columns in our data for visualization purposes.
+* Then, I will add a new column with the total number of individuals in it. 
+
+```{r}
+site1 |> 
+  select(site_code, Taxon, Count) |>
+  mutate(tot_n = sum(Count))
+```
+* Now we can add to the `mutate()` command and calculate the proportion of each taxa  
+
+```{r}
+site1 |> 
+  select(site_code, Taxon, Count) |>
+  mutate(tot_n = sum(Count),
+         pi = Count / tot_n)
+```
+* Then, we can take the log of pi in one column, and add another where we multiply $p_i \log p_i$
+
+```{r}
+site1 |> 
+  select(site_code, Taxon, Count) |>
+  mutate(tot_n = sum(Count),
+         pi = Count / tot_n,
+         ln_pi = log(pi),
+         pi_ln_pi = pi*ln_pi)
+```
+
+
+
+## Number of individuals metrics
