@@ -1,7 +1,6 @@
 ---
 title: "Single metrics"
 author: "Justin Pomeranz"
-date: "`r Sys.Date()`"
 output: html_document
 ---
 
@@ -12,8 +11,13 @@ library(tidyverse)
 
 site1 <- read_excel(here::here("data/MMI_HW_data.xlsx"),
                     sheet = "A75CC")
+site2 <- read_excel(here::here("data/MMI_HW_data.xlsx"),
+                    sheet = "A72")
 taxa_info <- read_excel(here::here("data/MMI_HW_data.xlsx"),
                         sheet = "taxa_info")
+
+site_info <- read_excel(here::here("data/MMI_HW_data.xlsx"),
+                        sheet = "site_info")
 ```
 
 ## Overview  
@@ -24,7 +28,8 @@ This tutorial will show how to calculate simple biomonitoring metrics from commu
 
 Community data is multifaceted and complex; a simple list of taxa can be expanded to include information on taxonomy and systematics, as well as trait data such as functional feeding groups (FFG), modes of existence, pollution tolerance, life history attributes, in addition to others. 
 
-Typically, metrics are organized into a few categories such as:
+Typically, metrics are organized into a few categories such as:  
+
 1) Structural  
 2) Composition  
 3) Life history  
@@ -33,7 +38,8 @@ Analyzing data in spreadsheet software such as Microsoft Excel is not overly dif
 
 For this reason, we will be learning the data and statistical language called R. Learning R, like learning any new language, is time-consuming and can be quite difficult, especially at the beginning. However, this is an important skill which is increasingly in demand in the job market. Every minute you spend learning it now will likely save you many minutes if not hours in the future, so it is well worth your time. 
 
-As they say in Australia:
+As they say in Australia:  
+
 > Don't be so busy digging a hole with a spoon that you don't take the time to go and get a shovel.
 
 
@@ -47,9 +53,11 @@ You can find the data stored in an excel workbook on the D2L site for our course
 
 ### Data structure  
 
-Once you download the data, open up the workbook to see how it's organized. The workbook has four sheets in it:
+Once you download the data, open up the workbook to see how it's organized. The workbook has four sheets in it:  
+
 1) `A75CC`  
   * Macroinvertebrate community data from a single site  
+
 2) `taxa_info`  
   * This sheet has taxonomic, FFG, and habit information for all taxa in the complete data set.  
   
@@ -71,8 +79,10 @@ Either way, we need to prepare the workspace before we bgein.
   * Or, you can watch [this video](https://jpomz.github.io/ENVS396-FA-2024/lessons/Introduction-to-course/) from a related course explaining the process. 
   
 * In your console, copy and run the following lines of code. Note that you only need to do this **once** per machine.  
-  * install.packages("tidyverse")  
-  * install.packages("readxl")  
+  * `install.packages("tidyverse"`  
+  
+  * `install.packages("readxl")`  
+  
   
 * Once this is done, open a new script and put the following lines of code at the top. 
 
@@ -270,6 +280,321 @@ site1 |>
          pi_ln_pi = pi*ln_pi)
 ```
 
+* Now we can use `summarize()` for the last step, where we sum all the `pi_ln_pi` values 
+
+```{r}
+shannon <- site1 |> 
+  select(site_code, Taxon, Count) |>
+  mutate(tot_n = sum(Count),
+         pi = Count / tot_n,
+         ln_pi = log(pi),
+         pi_ln_pi = pi*ln_pi) |>
+  group_by(site_code) |>
+  summarize(H = -sum(pi_ln_pi))
+shannon
+```
+
+* As before, we can join this to our growing list of results. 
+
+```{r}
+single_results <- left_join(single_results, shannon)
+single_results
+```
 
 
-## Number of individuals metrics
+## Number of individuals metrics  
+### Percent of EPT individuals  
+
+* The previous richness metrics were looking at the number of taxa.  
+* We also want to look at the proportion of individuals which are members of different orders.  
+* Percent EPT individuals = $\frac{n_{\ EPT\_individuals}} {n_{\ total\_individuals}}$
+
+* Before we `filter()` out the EPT, we will need to add a column with the total number of individuals.  
+* I will also select the columns we're interested in so the output is easier to see
+
+```{r}
+site_taxa |>
+  select(site_code, Order, Count) |>
+  mutate(tot_n = sum(Count)) |>
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera" |
+           Order == "Trichoptera")
+```
+
+* Now we need to get a little creative  
+* we will group by `site_code` and `tot_n`.  
+* this "preserves the `tot_n` column and "brings it along with us" for the next step
+
+```{r}
+site_taxa |>
+  select(site_code, Order, Count) |>
+  mutate(tot_n = sum(Count)) |>
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera" |
+           Order == "Trichoptera") |>
+  group_by(site_code, tot_n) |>
+  summarize(ept_n = sum(Count)) 
+```
+
+* Now we can divide our values with a `mutate()` command
+
+```{r}
+site_taxa |>
+  select(site_code, Order, Count) |>
+  mutate(tot_n = sum(Count)) |>
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera" |
+           Order == "Trichoptera") |>
+  group_by(site_code, tot_n) |>
+  summarize(ept_n = sum(Count)) |>
+  mutate(ept_percent_ind = ept_n / tot_n)
+```
+
+* finally, we will save the result after `select()`ing the columns that we need 
+
+```{r}
+ept_ind <- site_taxa |>
+  select(site_code, Order, Count) |>
+  mutate(tot_n = sum(Count)) |>
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera" |
+           Order == "Trichoptera") |>
+  group_by(site_code, tot_n) |>
+  summarize(ept_n = sum(Count)) |>
+  mutate(ept_percent_ind = ept_n / tot_n) |>
+  select(site_code, ept_percent_ind)
+ept_ind
+```
+
+* Join this to our results object  
+
+```{r}
+single_results <- left_join(single_results, ept_ind)
+single_results
+```
+> Work on problem 2 on homework assignment. 
+
+
+## Multiple sites at once  
+
+* Now, we will read in the second sheet in the excel file  
+
+```{r, eval=FALSE}
+site2 <- read_excel("data/MMI_HW_data.xlsx",
+                    sheet = "A72") 
+```
+
+* let's look at this new object.  
+
+```{r}
+head(site2)
+```
+
+* We will combine our `site1` object and our `site2` object using the `bind_rows()` function.  
+* This works easily because the column names and structure are identical in these 2 objects  
+* I will also print out the dimensions of all three objects to show that the number of rows are being added together, but the number of columns does not change. 
+
+```{r}
+dim(site1) # note that output is number of rows and columns, in that order
+dim(site2)
+two_sites <- bind_rows(site1, site2)
+dim(two_sites)
+head(two_sites)
+
+```
+
+* Our individual objects had 44 and 12 rows respectively, and both had 3 columns  
+* our combined data has 56 rows (44 + 12) and still has 3 columns  
+* And we can see that the `head()` of the data still looks the same.  
+
+* Now we will also join the taxonomic infomration to add more columns to our new object  
+
+```{r}
+two_sites <- left_join(two_sites, taxa_info)
+head(two_sites)
+```
+
+
+### Re-calculate results with two sites  
+
+* As an example, we will recalculate the total richness, EPT richness, and percent EPT individuals  
+* The code here is basically copied from above, so I won't go through it in as much detail.  
+* Just be aware of the names of the data objects  
+* The main thing is that we're starting with our new object `two_sites` and will be making a new results object called `two_sites_results`  
+
+
+```{r}
+total_rich <- two_sites|>
+  distinct(site_code, Taxon) |>
+  group_by(site_code) |>
+  summarize(tot_rich = n())
+
+total_rich
+```
+
+* This is the same as before, but now we have two rows, one for each `site_code` 
+
+
+```{r}
+ephem_rich <- two_sites %>%
+  filter(Order == "Ephemeroptera") |>
+  distinct(site_code, Taxon) |>
+  group_by(site_code) |>
+  summarize(E_rich = n())
+ephem_rich
+
+ept_ind <- two_sites |>
+  select(site_code, Order, Count) |>
+  mutate(tot_n = sum(Count)) |>
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera" |
+           Order == "Trichoptera") |>
+  group_by(site_code, tot_n) |>
+  summarize(ept_n = sum(Count)) |>
+  mutate(ept_percent_ind = ept_n / tot_n) |>
+  select(site_code, ept_percent_ind)
+ept_ind
+
+two_sites_results <- left_join(total_rich, ephem_rich)
+two_sites_results <- left_join(two_sites_results, ept_ind)
+two_sites_results
+```
+
+> Work on problem 3 on homework assignment. 
+
+## Plotting results  
+
+* we can make plots and graphs of our results  
+* we will making our plots with the `ggplot()` function  
+
+### Plotting Total Richness  
+
+* We are going to make a bar graph with our sites on the x-axis and the richness value on our y axis  
+
+```{r}
+ggplot(two_sites_results,
+       aes(x = site_code,
+           y = tot_rich)) +
+  geom_bar(stat = "identity")
+```
+
+* we can also add other aesthetics, such as changing the fill to match with the impact category.  
+* first, we need to add the site_info back to our results object  
+* The site_info is stored in another sheet in your excel book  
+* Let's first read that in as a new data object.  
+
+
+```{r, eval=FALSE}
+site_info <- read_excel("data/MMI_HW_data.xlsx",
+                        sheet = "site_info")
+```
+
+* Now we can bind that to our results and make a plot  
+
+```{r}
+two_sites_results <- left_join(two_sites_results, site_info)
+
+ggplot(two_sites_results,
+       aes(x = site_code,
+           y = tot_rich,
+           fill = impact_category)) +
+  geom_bar(stat = "identity")
+```
+
+* we can also add a title and change the axis labels to be more descriptive  
+* I am also going to add a `theme_bw()` layer because I think it looks better than the defaults.  
+
+```{r}
+ggplot(two_sites_results,
+       aes(x = site_code,
+           y = tot_rich,
+           fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  labs( title = "Total Taxonomic Richness", 
+        x = "Site", 
+        y = "Number of Taxa") +
+  theme_bw()
+```
+
+
+* You can also change the color values using pre-determined color palettes  
+* The `viridis` palette is designed to be colorblind and grey-scale friendly, and has different palette options in it. 
+
+```{r}
+ggplot(two_sites_results,
+       aes(x = site_code,
+           y = tot_rich,
+           fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  labs( title = "Total Taxonomic Richness", 
+        x = "Site", 
+        y = "Number of Taxa") +
+  theme_bw() +
+  scale_fill_viridis_d()
+```
+
+* Other color options inside of `viridis`  
+* Options A-H  
+* each option also has a name  
+* You can Google "Viridis palettes" for a full list of otions and examples
+
+```{r}
+ggplot(two_sites_results,
+       aes(x = site_code,
+           y = tot_rich,
+           fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  labs( title = "Total Taxonomic Richness", 
+        x = "Site", 
+        y = "Number of Taxa") +
+  theme_bw() +
+  scale_fill_viridis_d(option = "H")
+
+ggplot(two_sites_results,
+       aes(x = site_code,
+           y = tot_rich,
+           fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  labs( title = "Total Taxonomic Richness", 
+        x = "Site", 
+        y = "Number of Taxa") +
+  theme_bw() +
+  scale_fill_viridis_d(option = "plasma")
+```
+
+### Plotting Ephemeroptera Richness  
+
+* We can modify the code to make plots of other metrics  
+* Change the `y = ` variable for other result columns  
+* Be sure to update the labels appropriately. 
+
+```{r}
+ggplot(two_sites_results,
+       aes(x = site_code,
+           y = E_rich,
+           fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  labs( title = "Ephemeroptera Taxonomic Richness", 
+        x = "Site", 
+        y = "Number of Taxa") +
+  theme_bw() +
+  scale_fill_viridis_d(option = "H")
+```
+
+> Do problem 4 in single metric assignments  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

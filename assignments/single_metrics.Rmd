@@ -1,0 +1,159 @@
+---
+title: "Single Metric Assignment"
+author: "Justin Pomeranz"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+This homework assignment will be completed entirely in R.  
+
+You will start a new R script which will have all of your code to answer the problems.  
+
+If I ask for interpretation of your results, you can write out your answer directly in your script. Just be sure to start each line with a `#`. 
+
+## Setup  
+
+* Every programming script needs to be a stand-alone document  
+* The first thing you should have is a title and author, and optionally a brief description of what the script does.  
+* Next, You should load your libraries  
+* Then load any data objects you will need  
+
+* Your homework script should look something like this (be sure to change the relevant sections as needed )  
+
+```{r, eval=FALSE}
+# ENVS337 R assignment 1
+# Single metrics
+# YOUR NAME
+
+# libraries
+library(tidyverse)
+
+# load data
+site1 <- read_excel("data/MMI_HW_data.xlsx",
+                    sheet = "A75CC")
+site2 <- read_excel("data/MMI_HW_data.xlsx",
+                    sheet = "A72")
+taxa_info <- read_excel("data/MMI_HW_data.xlsx",
+                        sheet = "taxa_info")
+site_info <- read_excel("data/MMI_HW_data.xlsx",
+                        sheet = "site_info")
+```
+
+
+## Problem 1  
+### Single-site Richness Metrics  
+
+For all sub-problems in problem 1, you will only be using the `site1` data object. 
+
+#### Problem 1.1  
+* Calculate the richness (number of taxa) which are in the Order Plecoptera  
+* Save this result as a data object and print it to the console. 
+
+#### Problem 1.2  
+* Calculate the richness (number of taxa) which are in the Order Trichoptera  
+* Save this result as a data object  
+* join this result with the result calculated in 1.1 above and print it to the console. 
+
+#### Problem 1.3  
+* Calculate the richness (number of taxa) which are in the scraper FFG  
+* Save this result as a data object  
+* join this result with the results calculated above and print it to the console. 
+
+## Problem 2  
+### Single-site Metrics with individuals  
+
+For all sub-problems in problem 2, you will only be using the `site1` data object. 
+
+#### Problem 2.1  
+
+* Calculate the percent of individuals which are in the Chironomidae Family  
+* Save this result as a data object and print it to the console. 
+
+#### Problem 2.2  
+
+* Calculate the percent of individuals which are in the Scraper FFG  
+* Save this result as a data object.  
+* join this result with the result calculated in 2.1 above and print it to the console. 
+
+
+## Problem 3  
+### Multiple-site Metrics  
+
+All sub-problems in problem 3 will work with the `site1` and `site2` data objects which have been combined using `bind_rows()`.  
+
+```{r, eval=FALSE}
+two_sites <- bind_rows(site1, site2)
+```
+
+
+#### Problem 3.1  
+
+* Calculate the EPT richness for your two sites  
+* Save this result as a new data object and print it to the screen  
+
+#### Problem 3.2  
+
+* Calculate the per cent of individuals which are in the shredder FFG. 
+* Save this result as a new data object
+* Join it to your result from 3.1 and print it to the screen  
+
+#### Problem 3.3  
+
+* Calculate the Shannon Diversity for these two sites.  
+* Save this result as a new data object
+* Join it to your previous results from problem 3 and print it to the screen  
+
+#### Problem 3.4  
+
+* Calculate the percent of individuals which are in the Chironomidae Family  
+* Save this result as a new data object
+* Join it to your previous results from problem 3 and print it to the screen  
+
+#### Problem 3.5 Challenge (optional)   
+
+This sub-problem is optional. Problem number 4 is not optional 
+
+* Calculate the percent of individuals which are in the EPT orders but remove all individuals in the Baetidae Family    
+* Save this result as a new data object
+* Join it to your previous results from problem 3 and print it to the screen  
+
+
+## Problem 4  
+### Plots    
+* All sub-problems in problem 4 will be working with the combined results from problem 3. i.e., the results from the two sites.   
+* All plots made in part 4 need to have the following:  
+  * A short, informative title.  
+  * x- and y-axis labels  
+  * Fill colors need to be based on the impact category variable.  
+  * The color palettes that you use are up to you  
+
+* Before you can plot, you will need to join the `site_info` to your results using the `left_join()` function. 
+  
+#### Problem 4.1  
+
+* Make a bar plot of the EPT richness results  
+
+#### Problem 4.2  
+
+* Make a bar plot of the percent of individuals in the shredder FFG 
+
+#### Problem 4.3  
+
+* Make a bar plot of the Shannon Diversity results  
+
+#### Problem 4.4  
+
+* Make a bar plot of the percent of individuals in the Chironomidae Family results  
+
+#### Problem 4.5 (Optional, if you did problem 3.5)  
+
+* Make a bar plot of the percent of individuals in EPT orders without individuals which are in Baetidae results  
+
+## This concludes this R-assignment  
+
+
