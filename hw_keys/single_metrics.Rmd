@@ -134,23 +134,77 @@ two_sites <- bind_rows(site1, site2)
 * Calculate the EPT richness for your two sites  
 * Save this result as a new data object and print it to the screen  
 
+```{r}
+ept_rich <- two_sites %>%
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera" |
+           Order == "Trichoptera") |>
+  distinct(site_code, Taxon) |>
+  group_by(site_code) |>
+  summarize(EPT_rich = n())
+ept_rich
+```
+
+
 #### Problem 3.2  
 
 * Calculate the per cent of individuals which are in the shredder FFG. 
 * Save this result as a new data object
 * Join it to your result from 3.1 and print it to the screen  
 
+```{r}
+shred_i <- two_sites %>%
+  select(site_code, FFG, Count) |>
+  mutate(tot_n = sum(Count)) |>
+  filter(FFG == "shredder") |>
+  group_by(site_code, tot_n) |>
+  summarize(shred_n = sum(Count)) |>
+  mutate(shred_percent_ind = shred_n / tot_n) |>
+  select(site_code, shred_percent_ind)
+a3.2 <- left_join(ept_rich, shred_i)
+a3.2
+```
+
+
 #### Problem 3.3  
 
 * Calculate the Shannon Diversity for these two sites.  
 * Save this result as a new data object
-* Join it to your previous results from problem 3 and print it to the screen  
+* Join it to your previous results from problem 3 and print it to the screen 
+
+```{r}
+shannon <- two_sites |> 
+  select(site_code, Taxon, Count) |>
+  mutate(tot_n = sum(Count),
+         pi = Count / tot_n,
+         ln_pi = log(pi),
+         pi_ln_pi = pi*ln_pi) |>
+  group_by(site_code) |>
+  summarize(H = -sum(pi_ln_pi))
+a3.3 <- left_join(a3.2, shannon)
+a3.3
+```
+
 
 #### Problem 3.4  
 
 * Calculate the percent of individuals which are in the Chironomidae Family  
 * Save this result as a new data object
 * Join it to your previous results from problem 3 and print it to the screen  
+
+```{r}
+c_ind <- two_sites|>
+  select(site_code, Family, Count) |>
+  mutate(tot_n = sum(Count)) |>
+  filter(Family == "Chironomidae") |>
+  group_by(site_code, tot_n) |>
+  summarize(c_n = sum(Count)) |>
+  mutate(c_percent_ind = c_n / tot_n) |>
+  select(site_code, c_percent_ind)
+a3.4 <- left_join(a3.3, c_ind)
+a3.4
+```
+
 
 #### Problem 3.5 Challenge (optional)   
 
@@ -160,9 +214,27 @@ This sub-problem is optional. Problem number 4 is not optional
 * Save this result as a new data object
 * Join it to your previous results from problem 3 and print it to the screen  
 
+```{r}
+ept_no_b <- two_sites |>
+  select(site_code, Order, Family, Count) |>
+  mutate(tot_n = sum(Count)) |>
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera" |
+           Order == "Trichoptera",
+         Family != "Baetidae") |>
+  group_by(site_code, tot_n) |>
+  summarize(ept_n = sum(Count)) |>
+  mutate(ept_no_b_percent_ind = ept_n / tot_n) |>
+  select(site_code, ept_no_b_percent_ind)
+a3.5 <- left_join(a3.4, ept_no_b)
+a3.5
+```
 
-## Problem 4  
+
+## Problem 4   
+
 ### Plots    
+
 * All sub-problems in problem 4 will be working with the combined results from problem 3. i.e., the results from the two sites.   
 * All plots made in part 4 need to have the following:  
   * A short, informative title.  
@@ -171,26 +243,97 @@ This sub-problem is optional. Problem number 4 is not optional
   * The color palettes that you use are up to you  
 
 * Before you can plot, you will need to join the `site_info` to your results using the `left_join()` function. 
+
+```{r}
+results <- left_join(a3.5, site_info)
+```
+
   
 #### Problem 4.1  
 
 * Make a bar plot of the EPT richness results  
 
+```{r}
+ggplot(results,
+       aes(x = site_code,
+           y = EPT_rich,
+           fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  labs(title = "EPT Taxa Richness", 
+       x = "Site code",
+       y = "Number of taxa") +
+  scale_fill_viridis_d() +
+  theme_bw()
+```
+
+
 #### Problem 4.2  
 
 * Make a bar plot of the percent of individuals in the shredder FFG 
+
+```{r}
+ggplot(results,
+       aes(x = site_code,
+           y = shred_percent_ind,
+           fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Shredder percent of individuals", 
+       x = "Site code",
+       y = "Percent") +
+  scale_fill_viridis_d() +
+  theme_bw()
+```
 
 #### Problem 4.3  
 
 * Make a bar plot of the Shannon Diversity results  
 
+```{r}
+ggplot(results,
+       aes(x = site_code,
+           y = H,
+           fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Shannon Diversity", 
+       x = "Site code",
+       y = "H") +
+  scale_fill_viridis_d() +
+  theme_bw()
+```
+
 #### Problem 4.4  
 
 * Make a bar plot of the percent of individuals in the Chironomidae Family results  
 
+```{r}
+ggplot(results,
+       aes(x = site_code,
+           y = c_percent_ind,
+           fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Chironomidae percent individuals", 
+       x = "Site code",
+       y = "Percent") +
+  scale_fill_viridis_d() +
+  theme_bw()
+```
+
 #### Problem 4.5 (Optional, if you did problem 3.5)  
 
 * Make a bar plot of the percent of individuals in EPT orders without individuals which are in Baetidae results  
+
+```{r}
+ggplot(results,
+       aes(x = site_code,
+           y = ept_no_b_percent_ind,
+           fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  labs(title = "EPT percent individuals with no Baetidae", 
+       x = "Site code",
+       y = "Percent") +
+  scale_fill_viridis_d() +
+  theme_bw()
+```
 
 ## This concludes this R-assignment  
 

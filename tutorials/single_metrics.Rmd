@@ -1,7 +1,9 @@
 ---
 title: "Single metrics"
 author: "Justin Pomeranz"
-output: html_document
+output: 
+  html_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -58,13 +60,16 @@ Once you download the data, open up the workbook to see how it's organized. The 
 1) `A75CC`  
   * Macroinvertebrate community data from a single site  
 
-2) `taxa_info`  
+2) `A72`  
+  * Macroinvertebrate community data from a single site 
+
+3) `taxa_info`  
   * This sheet has taxonomic, FFG, and habit information for all taxa in the complete data set.  
   
-3) `other_sites` 
+4) `other_sites` 
   * This sheet has macroinvertebrate community data for all other sites that MSI sampled that we will be looking at for this tutorial and the associated homework assignment.  
   
-4) `site_info`  
+5) `site_info`  
   * This last sheet has information on the sites (one row per site) which includes the site_code, site name, what river it's located on, the distance downstream (for Animas River sites only), and the impact category (reference or impacted)  
   
 ## R  
@@ -79,7 +84,7 @@ Either way, we need to prepare the workspace before we bgein.
   * Or, you can watch [this video](https://jpomz.github.io/ENVS396-FA-2024/lessons/Introduction-to-course/) from a related course explaining the process. 
   
 * In your console, copy and run the following lines of code. Note that you only need to do this **once** per machine.  
-  * `install.packages("tidyverse"`  
+  * `install.packages("tidyverse")`  
   
   * `install.packages("readxl")`  
   
@@ -249,6 +254,13 @@ single_results
 
 $$ H = -\sum p_i \log p_i$$
 Where $p_i$ is the proportion of individuals in taxa $i$.  
+
+### Interpretation of Shannon diversity  
+
+Higher values of $H$ indicate higher diversity values. An $H$ of 0 indicates that only a single species is present in the community. 
+
+### Calculating $H$  
+
 
 * This equation might look daunting, but it's actually fairly easy to calculate in R  
 * We will learn a new data manipulation verb called `mutate()` which adds columns to our data.  

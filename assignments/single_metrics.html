@@ -354,6 +354,20 @@ display: none;
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#setup" id="toc-setup">Setup</a></li>
+<li><a href="#problem-1-single-site-richness-metrics" id="toc-problem-1-single-site-richness-metrics">Problem 1: Single-site
+Richness Metrics</a></li>
+<li><a href="#problem-2-single-site-metrics-with-individuals" id="toc-problem-2-single-site-metrics-with-individuals">Problem 2:
+Single-site Metrics with individuals</a></li>
+<li><a href="#problem-3-multiple-site-metrics" id="toc-problem-3-multiple-site-metrics">Problem 3: Multiple-site
+Metrics</a></li>
+<li><a href="#problem-4-plots" id="toc-problem-4-plots">Problem 4:
+Plots</a></li>
+</ul>
+</div>
 
 <div id="overview" class="section level2">
 <h2>Overview</h2>
@@ -395,10 +409,8 @@ taxa_info &lt;- read_excel(&quot;data/MMI_HW_data.xlsx&quot;,
 site_info &lt;- read_excel(&quot;data/MMI_HW_data.xlsx&quot;,
                         sheet = &quot;site_info&quot;)</code></pre>
 </div>
-<div id="problem-1" class="section level2">
-<h2>Problem 1</h2>
-<div id="single-site-richness-metrics" class="section level3">
-<h3>Single-site Richness Metrics</h3>
+<div id="problem-1-single-site-richness-metrics" class="section level2">
+<h2>Problem 1: Single-site Richness Metrics</h2>
 <p>For all sub-problems in problem 1, you will only be using the
 <code>site1</code> data object.</p>
 <div id="problem-1.1" class="section level4">
@@ -435,12 +447,9 @@ the console.</li>
 </ul>
 </div>
 </div>
-</div>
-<div id="problem-2" class="section level2">
-<h2>Problem 2</h2>
-<div id="single-site-metrics-with-individuals" class="section level3">
-<h3>Single-site Metrics with individuals</h3>
-<p>For all sub-problems in problem 1, you will only be using the
+<div id="problem-2-single-site-metrics-with-individuals" class="section level2">
+<h2>Problem 2: Single-site Metrics with individuals</h2>
+<p>For all sub-problems in problem 2, you will only be using the
 <code>site1</code> data object.</p>
 <div id="problem-2.1" class="section level4">
 <h4>Problem 2.1</h4>
@@ -464,11 +473,8 @@ it to the console.</li>
 </ul>
 </div>
 </div>
-</div>
-<div id="problem-3" class="section level2">
-<h2>Problem 3</h2>
-<div id="multiple-site-metrics" class="section level3">
-<h3>Multiple-site Metrics</h3>
+<div id="problem-3-multiple-site-metrics" class="section level2">
+<h2>Problem 3: Multiple-site Metrics</h2>
 <p>All sub-problems in problem 3 will work with the <code>site1</code>
 and <code>site2</code> data objects which have been combined using
 <code>bind_rows()</code>.</p>
@@ -525,23 +531,25 @@ screen</li>
 </ul>
 </div>
 </div>
-</div>
-<div id="problem-4" class="section level2">
-<h2>Problem 4</h2>
-<div id="plots" class="section level3">
-<h3>Plots</h3>
+<div id="problem-4-plots" class="section level2">
+<h2>Problem 4: Plots</h2>
 <ul>
 <li>All sub-problems in problem 4 will be working with the combined
 results from problem 3. i.e., the results from the two sites.<br />
 </li>
-<li>All plots made in part 4 need to have the follwoing:
+<li>All plots made in part 4 need to have the following:
 <ul>
 <li>A short, informative title.<br />
 </li>
 <li>x- and y-axis labels<br />
 </li>
-<li>Fill colors need to be based on the impact category variable.</li>
+<li>Fill colors need to be based on the impact category variable.<br />
+</li>
+<li>The color palettes that you use are up to you</li>
 </ul></li>
+<li>Before you can plot, you will need to join the
+<code>site_info</code> to your results using the
+<code>left_join()</code> function.</li>
 </ul>
 <div id="problem-4.1" class="section level4">
 <h4>Problem 4.1</h4>
@@ -576,10 +584,9 @@ Family results</li>
 individuals which are in Baetidae results</li>
 </ul>
 </div>
+<div id="this-concludes-this-r-assignment" class="section level3">
+<h3>This concludes this R-assignment</h3>
 </div>
-</div>
-<div id="this-concludes-this-r-assignment" class="section level2">
-<h2>This concludes this R-assignment</h2>
 </div>
 
 

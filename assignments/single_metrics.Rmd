@@ -1,7 +1,10 @@
 ---
 title: "Single Metric Assignment"
 author: "Justin Pomeranz"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
 ---
 
 ```{r setup, include=FALSE}
@@ -45,8 +48,7 @@ site_info <- read_excel("data/MMI_HW_data.xlsx",
 ```
 
 
-## Problem 1  
-### Single-site Richness Metrics  
+## Problem 1: Single-site Richness Metrics  
 
 For all sub-problems in problem 1, you will only be using the `site1` data object. 
 
@@ -64,8 +66,7 @@ For all sub-problems in problem 1, you will only be using the `site1` data objec
 * Save this result as a data object  
 * join this result with the results calculated above and print it to the console. 
 
-## Problem 2  
-### Single-site Metrics with individuals  
+## Problem 2: Single-site Metrics with individuals  
 
 For all sub-problems in problem 2, you will only be using the `site1` data object. 
 
@@ -81,8 +82,7 @@ For all sub-problems in problem 2, you will only be using the `site1` data objec
 * join this result with the result calculated in 2.1 above and print it to the console. 
 
 
-## Problem 3  
-### Multiple-site Metrics  
+## Problem 3: Multiple-site Metrics  
 
 All sub-problems in problem 3 will work with the `site1` and `site2` data objects which have been combined using `bind_rows()`.  
 
@@ -123,8 +123,7 @@ This sub-problem is optional. Problem number 4 is not optional
 * Join it to your previous results from problem 3 and print it to the screen  
 
 
-## Problem 4  
-### Plots    
+## Problem 4: Plots    
 * All sub-problems in problem 4 will be working with the combined results from problem 3. i.e., the results from the two sites.   
 * All plots made in part 4 need to have the following:  
   * A short, informative title.  
@@ -154,6 +153,6 @@ This sub-problem is optional. Problem number 4 is not optional
 
 * Make a bar plot of the percent of individuals in EPT orders without individuals which are in Baetidae results  
 
-## This concludes this R-assignment  
+### This concludes this R-assignment  
 
 

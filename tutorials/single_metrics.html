@@ -11,7 +11,6 @@
 
 <meta name="author" content="Justin Pomeranz" />
 
-<meta name="date" content="2024-09-27" />
 
 <title>Single metrics</title>
 
@@ -352,10 +351,49 @@ display: none;
 
 <h1 class="title toc-ignore">Single metrics</h1>
 <h4 class="author">Justin Pomeranz</h4>
-<h4 class="date">2024-09-27</h4>
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#overview" id="toc-overview">Overview</a></li>
+<li><a href="#introduction" id="toc-introduction">Introduction</a></li>
+<li><a href="#data" id="toc-data">Data</a>
+<ul>
+<li><a href="#data-structure" id="toc-data-structure">Data
+structure</a></li>
+</ul></li>
+<li><a href="#r" id="toc-r">R</a></li>
+<li><a href="#getting-the-data-into-r" id="toc-getting-the-data-into-r">Getting the data into R</a></li>
+<li><a href="#simple-metrics" id="toc-simple-metrics">Simple
+metrics</a></li>
+<li><a href="#taxa-metrics" id="toc-taxa-metrics">Taxa metrics</a>
+<ul>
+<li><a href="#total-richness" id="toc-total-richness">Total
+Richness</a></li>
+<li><a href="#ephemeroptera-richness" id="toc-ephemeroptera-richness">Ephemeroptera Richness</a></li>
+<li><a href="#ept-richness" id="toc-ept-richness">EPT richness</a></li>
+</ul></li>
+<li><a href="#shannon-diversity" id="toc-shannon-diversity">Shannon
+Diversity</a></li>
+<li><a href="#number-of-individuals-metrics" id="toc-number-of-individuals-metrics">Number of individuals metrics</a>
+<ul>
+<li><a href="#percent-of-ept-individuals" id="toc-percent-of-ept-individuals">Percent of EPT individuals</a></li>
+</ul></li>
+<li><a href="#multiple-sites-at-once" id="toc-multiple-sites-at-once">Multiple sites at once</a>
+<ul>
+<li><a href="#re-calculate-results-with-two-sites" id="toc-re-calculate-results-with-two-sites">Re-calculate results with
+two sites</a></li>
+</ul></li>
+<li><a href="#plotting-results" id="toc-plotting-results">Plotting
+results</a>
+<ul>
+<li><a href="#plotting-total-richness" id="toc-plotting-total-richness">Plotting Total Richness</a></li>
+<li><a href="#plotting-ephemeroptera-richness" id="toc-plotting-ephemeroptera-richness">Plotting Ephemeroptera
+Richness</a></li>
+</ul></li>
+</ul>
+</div>
 
 <div id="overview" class="section level2">
 <h2>Overview</h2>
@@ -419,6 +457,13 @@ organized. The workbook has four sheets in it:</p>
 <li>Macroinvertebrate community data from a single site</li>
 </ul>
 <ol start="2" style="list-style-type: decimal">
+<li><code>A72</code><br />
+</li>
+</ol>
+<ul>
+<li>Macroinvertebrate community data from a single site</li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
 <li><code>taxa_info</code><br />
 </li>
 </ol>
@@ -426,7 +471,7 @@ organized. The workbook has four sheets in it:</p>
 <li>This sheet has taxonomic, FFG, and habit information for all taxa in
 the complete data set.</li>
 </ul>
-<ol start="3" style="list-style-type: decimal">
+<ol start="4" style="list-style-type: decimal">
 <li><code>other_sites</code></li>
 </ol>
 <ul>
@@ -434,7 +479,7 @@ the complete data set.</li>
 that MSI sampled that we will be looking at for this tutorial and the
 associated homework assignment.</li>
 </ul>
-<ol start="4" style="list-style-type: decimal">
+<ol start="5" style="list-style-type: decimal">
 <li><code>site_info</code><br />
 </li>
 </ol>
@@ -467,7 +512,7 @@ video</a> from a related course explaining the process.</li>
 <li>In your console, copy and run the following lines of code. Note that
 you only need to do this <strong>once</strong> per machine.
 <ul>
-<li><p><code>install.packages(&quot;tidyverse&quot;</code></p></li>
+<li><p><code>install.packages(&quot;tidyverse&quot;)</code></p></li>
 <li><p><code>install.packages(&quot;readxl&quot;)</code></p></li>
 </ul></li>
 <li>Once this is done, open a new script and put the following lines of
