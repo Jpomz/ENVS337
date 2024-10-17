@@ -1,0 +1,341 @@
+---
+title: "CO MMI"
+author: "Justin Pomeranz"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(tidyverse)
+
+site1 <- read_excel(here::here("data/MMI_HW_data.xlsx"),
+                    sheet = "A75CC")
+site2 <- read_excel(here::here("data/MMI_HW_data.xlsx"),
+                    sheet = "A72")
+other_sites <- read_excel(here::here("data/MMI_HW_data.xlsx"),
+                        sheet = "other_sites")
+taxa_info <- read_excel(here::here("data/MMI_HW_data.xlsx"),
+                        sheet = "taxa_info")
+
+site_info <- read_excel(here::here("data/MMI_HW_data.xlsx"),
+                        sheet = "site_info")
+
+all_sites <- bind_rows(site1, site2, other_sites)
+all_sites <- left_join(all_sites, taxa_info)
+```
+
+## Overview  
+
+This tutorial will show how to calculate Colorado's Multi-metric Index (MMI). As the name implies, there are multiple single metrics that need to be calculated and then are standardized based on reference values. Finally, the individual metrics are averaged for a single score. This tutorial only examines Colorado's Biotype 2 (Mountains). Different MMI's need to be calculated for Biotype 1 (Transitional) and Biotype 3 (Plains and Xeric). More information on CO's MMI can be found [here](https://storymaps.arcgis.com/stories/64e3a6eda9f94b7f925bd551ea66ce87)  
+
+## Introduction  
+
+Colorado's multi-metric index is a standardised method for assessing water quality by analyzing benthic macroinvertebrate community data. 
+
+## Metrics  
+
+There are a total of 8 metrics that we will be calculating. In general, a metric is calculated based on the community data and then "standardised" based on a reference value. 
+
+For example, the first metric we will look at is called "TotalTax". The metric is calculated by simply counting the number of taxa from a site. The score ($S$) is then calculated by standardizing the metric ($m$) as: 
+
+$$ S_{TotalTax} = 100 * m / 42 $$
+$42$ is the reference value, and multiplying by $100$ essentially makes the score a percentage of the reference value. For example, if we had a metric of 34 taxa, the score would be:  
+
+$$S_{TotalTax} = 100 * 34 / 42 = 80.95$$
+
+There are two main categories of metrics for Biotype 2:  
+
+1) Number of taxa  
+
+2) Percent of individuals  
+
+The following table describes the metrics for Biotype 2. 
+
+| Metric name| Description| Formula|
+|:-----------|:-----------|:-------:|
+|TotalTax| Total Number of Taxa| $100 * m / 42$|
+|aEPTTax| Total number of EPT taxa| $100 * m / 24.5$|
+|pEPTnoB| Percent of individuals which are EPT taxa *except* for the Baetidae Family| $100 * m / 79.3$|
+|ClingerTax| Total number of Clinger Taxa| $100 * m / 20$|
+|IntolerantTax| Number of taxa which are classified as sensitive for Biotype 2| $100 * m / 21$|
+|pi_SensitiveTax| Percent of individuals which are classified as sensitive for Biotype 1 or Biotype 2| $100 * m / 72.3$|
+|PredatorTax| Number of Predator Taxa| $100 * m / 13$|
+|pi_ScraperTax| Percent of individuals which are scrapers| $100 * m / 44.2$|
+
+## Data  
+
+We are going to continue working with data collected by [Mountain Studies Institute](https://www.mountainstudies.org/) after the [2015 Gold King Mine](https://en.wikipedia.org/wiki/2015_Gold_King_Mine_waste_water_spill) spill into the Animas River.
+
+You can find the data stored in an excel workbook on the D2L site for our course. The data is called `MMI_HW_data.xlsx`  
+
+### Data structure  
+
+This is the same data we worked with previously. As a reminder, the data can be found in five sheets in the workbook, and they are as follows:  
+
+1) `A75CC`  
+  * Macroinvertebrate community data from a single site  
+
+2) `A72`  
+  * Macroinvertebrate community data from a single site 
+
+3) `taxa_info`  
+  * This sheet has taxonomic, FFG, and habit information for all taxa in the complete data set.  
+  
+4) `other_sites` 
+  * This sheet has macroinvertebrate community data for all other sites that MSI sampled that we will be looking at for this tutorial and the associated homework assignment.  
+  
+5) `site_info`  
+  * This last sheet has information on the sites (one row per site) which includes the site_code, site name, what river it's located on, the distance downstream (for Animas River sites only), and the impact category (reference or impacted)  
+  
+## Data set up in R  
+
+First, we need to load the following libraries at the top of your script. 
+
+```{r, eval=FALSE}
+library(readxl)
+library(tidyverse)
+```
+
+* Read in all three sheets with community data and bind them together. 
+```{r, eval=FALSE}
+site1 <- read_excel("data/MMI_HW_data.xlsx",
+                    sheet = "A75CC") 
+site2 <- read_excel("data/MMI_HW_data.xlsx",
+                    sheet = "A72") 
+other_sites <- read_excel("data/MMI_HW_data.xlsx",
+                    sheet = "other_sites")
+
+all_sites <- bind_rows(site1, site2, other_sites)
+```
+
+* We also need the `taxa_info` to be joined to our site data to calculate the metrics 
+
+```{r, eval = FALSE}
+taxa_info <- read_excel("data/MMI_HW_data.xlsx",
+                        sheet = "taxa_info")
+
+all_sites <- left_join(all_sites, taxa_info)
+```
+
+* After we calculate the metrics below, we will read in the `site_info` and join it with our results for plotting purposes. 
+
+## Metrics  
+
+In this tutorial, we will calculate three of the eight metrics. For your assignment, you will need to repeat these three calculations, and then modify the code provided in this tutorial to calculate the other 5 metrics. 
+
+### TotalTax   
+
+* Let's first calculate the total number of taxa  
+
+* The first few steps will be the same as our previous tutorial.  
+
+```{r}
+total_tax <- all_sites |>
+  distinct(site_code, Taxon) |>
+  group_by(site_code) |>
+  summarize(tot_tax = n())
+
+total_tax
+```
+* We now have an additional step to calculate the score  
+* we can use `mutate()` to add a new column which will gives us the site-specific score for this metric.  
+
+```{r}
+total_tax |>
+  mutate(s_total_tax = 100 * tot_tax / 42)
+
+```
+
+* Remember that this can be interpreted as a percentage  
+
+  * so the value of $28.57$ from site `A72` is like a very low "F" grade (~29%)  
+  
+  * Whereas the value of $104.76$ at site `A75CC` is over an "A+" grade (105%)  
+
+
+* Also recall that the above code does the calculation but it is not saved anywhere  
+
+* The following code saves the results in a data object  
+* It also removes the `total_tax` column as we don't need it anymore, and removing it now will make our job easier later  
+
+```{r}
+total_tax <- total_tax |>
+  mutate(s_total_tax = 100 * tot_tax / 42) |>
+  select(-tot_tax)
+total_tax
+```
+
+  
+### aEPTTax  
+
+* This metric looks at the number of EPT taxa at each site  
+
+  * Note that the "a" in the name is a prefix used in the derivation of the the MMI which means "number of taxa"   
+  
+  * Compare this with the "pi_" prefix below which means "percent of individuals"  
+  
+* This metric is also similar to what we calculated before  
+* It requires that we `filter()` out the appropriate rows of data before we calculate it.   
+
+
+```{r}
+ept_tax <- all_sites |>
+  filter(Order == "Ephemeroptera" |
+           Order == "Plecoptera" |
+           Order == "Trichoptera") |>
+  distinct(site_code, Taxon) |>
+  group_by(site_code) |>
+  summarize(ept_tax = n())
+ept_tax 
+```
+
+* As above, we can calculate the site-specific score using the `mutate()` function  
+* Be sure to use the appropriate "reference" value from the table describing the metrics above.  
+* in this case it is 24.5  
+* I will also go ahead and save these results and get rid of the extra column all in one step  
+
+```{r}
+ept_tax <- ept_tax |>
+  mutate(s_ept_tax = 100 * ept_tax / 24.5) |>
+  select(-ept_tax)
+ept_tax
+```
+
+* We will also now combine the results of our two individual metrics  
+
+```{r}
+metric_scores <- left_join(total_tax, ept_tax)
+metric_scores
+```
+
+### pi_SensitiveTax
+
+* We will now calculate a metric based on the percent of individuals  
+* before we calculate the metric, we have to modify the data slightly by calculating the total number of individuals in each site  
+* This is similar to what we did in the last tutorial when we calculated the number of EPT individuals.  
+* The following code calculates the total number of individuals per site  
+  * note the extra `select()` command is just used for displaying the results  
+  * You will want to remove that line before moving on to the next part  
+
+```{r}
+all_sites |>
+  group_by(site_code) |>
+  mutate(tot_n = sum(Count)) |>
+  select(site_code, Taxon, Count, tot_n)
+```
+
+* Here, we will need to use a new bit of the data that we haven't worked with before  
+* There is a column called `sensitive_taxa` which has values of `TRUE` if it is classified as a sensitive taxa in either biotype 1 or biotype 2, and `FALSE` if it is not classified as sensitive.  
+* We will use `filter()` to keep only the `TRUE` values.  
+* We will then group the data by site, total n and the sensitive taxa column  
+* Then we will sum the number of individuals in the `TRUE` category which can be used to calculate the percentage  
+* Finally, we can calculate the score  
+
+```{r}
+pi_sens <- all_sites |>
+  group_by(site_code) |>
+  mutate(tot_n = sum(Count)) |>
+  filter(sensitive_taxa == TRUE) |>
+  group_by(site_code, tot_n, sensitive_taxa) |>
+  summarise(n_sens = sum(Count)) |>
+  ungroup() |>
+  mutate(pi_sens = n_sens / tot_n * 100,
+         s_pi_sens = 100*pi_sens / 72.3) |>
+  select(site_code, s_pi_sens)
+pi_sens
+```
+
+* We can now add this to our growing group of MMI scores  
+
+```{r}
+metric_scores <- left_join(metric_scores, pi_sens)
+metric_scores
+```
+
+## Average MMI score  
+
+* Note that we only calculated some of the metrics, so the following averages should not be interpreted as the final MMI value  
+
+* You will need to calculate the remaining metrics in your assignment  
+* The following section of the tutorial will show you how to average the metric scores, and to plot the results.  
+
+### Averaging the MMI scores  
+
+* Currently, we have a data frame where each rows represents a site, and the columns are each a core for one metric  
+* We now need to average *across* the columns to calculate an MMI score  
+* This will require a slightly different solution to what we've seen so far  
+* We need to group the data by rows using `rowwise()`  
+* Then we use a special helper function called `c_across()` where we give it the names of the columns to work across  
+* we can use the `:` to separate the first and last column name  
+* Note that in your assignment you will have additional columns so you will need to change the last name  
+
+```{r}
+metric_scores |>
+  rowwise() |>
+  mutate(mmi_mean = mean(c_across(s_total_tax:s_pi_sens)))
+```
+
+* I will now repeat the above and save it in a new object  
+* I will also get rid of the unnecessary columns.  
+
+```{r}
+mmi <- metric_scores |>
+  rowwise() |>
+  mutate(mmi_mean = mean(c_across(s_total_tax:s_pi_sens))) |>
+  select(site_code, mmi_mean)
+mmi
+```
+
+### Join site_info  
+
+```{r, eval=FALSE}
+site_info <- read_excel("data/MMI_HW_data.xlsx",
+                        sheet = "site_info")
+```
+
+```{r}
+mmi <- left_join(mmi, site_info)
+mmi
+```
+
+## Plots  
+
+### Pairwise plots  
+Pairwise (ref, impact):
+A = A68, A72
+B = A73EC, A73
+C = A75CC, A75D
+
+```{r}
+mmi |>
+  filter(!is.na(pairwise)) |>
+  ggplot(aes(x = impact_category,
+             y = mmi_mean,
+             fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~pairwise,
+             scales = "free_x")
+```
+
+
+
+### Longitudinal plots  
+
+Longitudinal
+A55, A60, A68 | A72, A73, A75D
+
+* Now we can bind that to our results and make a plot  
+
+```{r}
+mmi |>
+  filter(!is.na(distance)) |>
+  ggplot(aes(x = distance,
+             y = mmi_mean,
+             fill = impact_category)) +
+  geom_bar(stat = "identity")
+```
+
+
