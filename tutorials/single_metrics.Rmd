@@ -76,10 +76,11 @@ Once you download the data, open up the workbook to see how it's organized. The 
 
 You should have already downloaded R and RStudio (in that order) on your personal laptops, or you are using a departmental computer which has it downloaded already. 
 
-Either way, we need to prepare the workspace before we bgein.  
+Either way, we need to prepare the workspace before we begin.  
 
 * Start by opening Rstudio  
 * Follow along in class to create a project called `ENVS337`  
+* The most important pat is under Tools > Global Options make sure to set "save workspace to .Rdata" to Never.   
   * If you missed class, there should be a panopto recording of how to do this  
   * Or, you can watch [this video](https://jpomz.github.io/ENVS396-FA-2024/lessons/Introduction-to-course/) from a related course explaining the process. 
   

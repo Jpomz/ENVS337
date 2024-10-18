@@ -161,7 +161,7 @@ mmi_mean
 ```
 
 
-## Problem 7: Pairwise plots  
+## Problem 8: Pairwise plots  
 
 ```{r}
 mmi_mean |>
@@ -176,7 +176,7 @@ mmi_mean |>
 ```
 
 
-## Problem 8: Longitudinal plots  
+## Problem 9: Longitudinal plots  
 
 ```{r}
 mmi_mean |>

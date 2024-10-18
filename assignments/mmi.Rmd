@@ -1,0 +1,193 @@
+---
+title: "MMI Assignment"
+author: "Justin Pomeranz"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+This homework assignment will be completed entirely in R.  
+
+You will start a new R script which will have all of your code to answer the problems.  
+
+If I ask for interpretation of your results, you can write out your answer directly in your script. Just be sure to start each line with a `#`. 
+
+## Setup  
+
+* Every programming script needs to be a stand-alone document  
+* The first thing you should have is a title and author, and optionally a brief description of what the script does.  
+* Next, You should load your libraries  
+* Then load any data objects you will need  
+
+* Your homework script should look something like this (be sure to change the relevant sections as needed )  
+
+```{r, eval=FALSE}
+# ENVS337 R assignment 2
+# MMI
+# YOUR NAME
+
+# libraries
+library(readxl)
+library(tidyverse)
+
+# load site data
+site1 <- read_excel("data/MMI_HW_data.xlsx",
+                    sheet = "A75CC")
+site2 <- read_excel("data/MMI_HW_data.xlsx",
+                    sheet = "A72")
+other_sites <- read_excel("data/MMI_HW_data.xlsx",
+                    sheet = "A72")
+
+# Load taxa data
+taxa_info <- read_excel("data/MMI_HW_data.xlsx",
+                        sheet = "taxa_info")
+
+# Load site data
+site_info <- read_excel("data/MMI_HW_data.xlsx",
+                        sheet = "site_info")
+
+# combine site data
+all_sites <- bind_rows(site1, site2, other_sites)
+
+# add taxa info to site data
+all_sites <- left_join(all_sites, taxa_info)
+
+```
+
+## Problem 1: pi_EPTnoB  
+
+Calculate the score for the percent of individuals in EPT except in the Baetidae family.   
+
+The following bullet points are an outline (in order) of the actions that need to occur to complete this calculation  
+
+* First, group the data by site code by using `group_by(site_code)`  
+* Use `mutate()` to calculate the total number of individuals in each site  
+* Use `filter()` to **INCLUDE** EPT taxa  
+* In the same `filter()` command, be sure to **EXCLUDE** the Baetidae family  
+* Group your data by `site_code` and the total number of individuals per site (in the tutorial for "pi_SensitiveTax" this was named `tot_n`)  
+* Use `summarize()` to sum the total number of individuals left in the data (i.e., `sum(Count))`  
+* Use `mutate()` to calculate the metric (number of EPT_no_B / tot_n) and the score ($100 * metric / 79.3$)  
+* use `select()` to only keep the `site_code` and the name of the column of the score you just created.  
+* display your final results in the console  
+
+## Problem 2: ClingerTax  
+
+Calculate the score for the number of "Clinger" taxa.  
+
+The following bullet points are an outline (in order) of the actions that need to occur to complete this calculation   
+
+* `filter()` all the rows where `habit` is equal to "clinger"  
+* Group your data by `site_code`  
+* `summarize()` your data by counting the number of rows in each site  
+  * i.e., use `n()` inside of summarize  
+  
+* use `mutate()` to calculate the score for this metric  
+  * i.e. $100 * metric / 20$  
+  
+* use `select()` to only keep the `site_code` and the name of the column of the score you just created.  
+* display your final results in the console  
+
+## Problem 3: IntolerantTax  
+
+Calculate the score for the number of "Intolerant" taxa.  
+
+The following bullet points are an outline (in order) of the actions that need to occur to complete this calculation   
+
+* `filter()` all the rows where `Bio2_sensitive` is equal to `TRUE`   
+* Group your data by `site_code`  
+* `summarize()` your data by counting the number of rows in each site  
+  * i.e., use `n()` inside of summarize  
+  
+* use `mutate()` to calculate the score for this metric  
+  * i.e. $100 * metric / 21$  
+  
+* use `select()` to only keep the `site_code` and the name of the column of the score you just created.  
+* display your final results in the console  
+
+## Problem 4: PredatorTax  
+
+Calculate the score for the number of "predator" taxa.  
+
+The following bullet points are an outline (in order) of the actions that need to occur to complete this calculation   
+
+* `filter()` all the rows where `FFG` is equal to "predator"  
+* Group your data by `site_code`  
+* `summarize()` your data by counting the number of rows in each site  
+  * i.e., use `n()` inside of summarize  
+  
+* use `mutate()` to calculate the score for this metric  
+  * i.e. $100 * metric / 13$  
+  
+* use `select()` to only keep the `site_code` and the name of the column of the score you just created.  
+* display your final results in the console  
+
+
+## Problem 5: pi_ScraperTax  
+
+Calculate the score for the percent of individuals that are in the "scraper" FFG.  
+
+The following bullet points are an outline (in order) of the actions that need to occur to complete this calculation  
+
+* First, group the data by site code by using `group_by(site_code)`  
+* Use `mutate()` to calculate the total number of individuals in each site  
+* Use `filter()` to include all the rows where `FFG` is equal to "scraper"    
+* Group your data by `site_code` and the total number of individuals per site (in the tutorial for "pi_SensitiveTax" this was named `tot_n`)  
+* Use `summarize()` to sum the total number of individuals left in the data (i.e., `sum(Count))`  
+* Use `mutate()` to calculate the metric (number of scraper individuals / tot_n) and the score ($100 * metric / 44.2$)  
+  
+* use `select()` to only keep the `site_code` and the name of the column of the score you just created.  
+* display your final results in the console  
+
+## Problem 6: Metrics from Tutorial  
+
+Copy the appropriate code from your notes/ the tutorial to calculate and display the scores for the following three metrics:  
+1) TotalTax  
+2) aEPTTax  
+3) pi_SensitiveTax  
+
+* Be sure to only include the `site_code` and whatever the column name that your score is stored in  
+
+## Problem 7: Mean MMMI and site info  
+
+Calculate the mean MMI score for each site.
+
+* First, you will need to `left_join()` all of the results for each individual metric score  
+* i.e., there should be 7 `left_join()` commands in sequence  
+* once all your data is joined, calculate the mean MMI score  
+* This was described in the "Averaging the MMI scores" section of the MMI Tutorial  
+
+Hint:
+* Use `rowwise()`  
+* inside of `mutate()`, use the `c_across()` function with the names of your first and last column to be averaged separated with a `:`  
+* `select()` the `site_code` and the name of the column which has your averages stored in it  
+
+* Once your averages are calculated, use one more `left_join()` command to add the `site_info` to your results  
+* Display your final object in the console here  
+
+## Problem 8: Pairwise Plots  
+
+* Produce a bar chart plot with all the appropriate pairwise combinations  
+* i.e., you should be able to copy the code from the MMI tutorial  
+* Just make sure to use the correct data object in the first line  
+
+* Interpret your plot  
+* In each pair, is the "reference" stream in attainment?  
+* Is the "impacted" stream out of attainment?  
+* Are any of the sites in the "Gray zone"?  
+* based on these results, what would you say about the overall impact of the contamination spill in the Animas River?
+
+
+## Problem 9: Longitudinal Plots   
+
+
+
+### This concludes this R-assignment  
+
+
