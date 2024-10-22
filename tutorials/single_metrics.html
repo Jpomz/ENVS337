@@ -1231,6 +1231,7 @@ ephem_rich</code></pre>
 ## 2 A75CC          8</code></pre>
 <pre class="r"><code>ept_ind &lt;- two_sites |&gt;
   select(site_code, Order, Count) |&gt;
+  group_by(site_code) |&gt;
   mutate(tot_n = sum(Count)) |&gt;
   filter(Order == &quot;Ephemeroptera&quot; |
            Order == &quot;Plecoptera&quot; |
@@ -1246,8 +1247,8 @@ ephem_rich</code></pre>
 ## # Groups:   site_code [2]
 ##   site_code ept_percent_ind
 ##   &lt;chr&gt;               &lt;dbl&gt;
-## 1 A72                 0.160
-## 2 A75CC               0.612</code></pre>
+## 1 A72                 0.890
+## 2 A75CC               0.746</code></pre>
 <pre class="r"><code>two_sites_results &lt;- left_join(total_rich, ephem_rich)</code></pre>
 <pre><code>## Joining with `by = join_by(site_code)`</code></pre>
 <pre class="r"><code>two_sites_results &lt;- left_join(two_sites_results, ept_ind)</code></pre>
@@ -1256,8 +1257,8 @@ ephem_rich</code></pre>
 <pre><code>## # A tibble: 2 × 4
 ##   site_code tot_rich E_rich ept_percent_ind
 ##   &lt;chr&gt;        &lt;int&gt;  &lt;int&gt;           &lt;dbl&gt;
-## 1 A72             12      1           0.160
-## 2 A75CC           44      8           0.612</code></pre>
+## 1 A72             12      1           0.890
+## 2 A75CC           44      8           0.746</code></pre>
 <blockquote>
 <p>Work on problem 3 on homework assignment.</p>
 </blockquote>

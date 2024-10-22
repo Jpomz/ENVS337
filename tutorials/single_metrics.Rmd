@@ -458,6 +458,7 @@ ephem_rich
 
 ept_ind <- two_sites |>
   select(site_code, Order, Count) |>
+  group_by(site_code) |>
   mutate(tot_n = sum(Count)) |>
   filter(Order == "Ephemeroptera" |
            Order == "Plecoptera" |
