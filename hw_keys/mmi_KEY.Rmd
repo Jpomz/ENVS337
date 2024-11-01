@@ -154,7 +154,7 @@ mmi_scores <- left_join(mmi_scores, pred)
 mmi_scores <- left_join(mmi_scores, pi_scraper)
 mmi_mean <- mmi_scores |>
   rowwise() |>
-  mutate(mmi_mean = mean(c_across(s_total_tax:s_pi_sens))) |>
+  mutate(mmi_mean = mean(c_across(s_total_tax:s_pred))) |>
   select(site_code, mmi_mean)
 mmi_mean <- left_join(mmi_mean, site_info)
 mmi_mean

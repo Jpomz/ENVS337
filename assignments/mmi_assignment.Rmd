@@ -185,7 +185,16 @@ Hint:
 
 
 ## Problem 9: Longitudinal Plots   
+* Produce a bar chart plot with `x = distance`.  
+* i.e., you should be able to copy the code from the MMI tutorial  
+* Just make sure to use the correct data object in the first line  
 
+* Interpret your plot  
+* Are the upstream "reference" sites in attainment? 
+* Are the downstream "impacted" sites out of attainment?  
+* Are any of the sites in the "Gray zone"?  
+* Were any of these results suprising to you?  
+* based on these results, what would you say about how the impact of the contamination spill changes moving downstream?  
 
 
 ### This concludes this R-assignment  
