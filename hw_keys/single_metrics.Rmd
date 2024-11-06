@@ -3,8 +3,8 @@ title: "Single Metric Assignment"
 author: "Justin Pomeranz"
 subtitle: "SOLUTION KEY"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -154,6 +154,7 @@ ept_rich
 
 ```{r}
 shred_i <- two_sites %>%
+  group_by(site_code) |>
   select(site_code, FFG, Count) |>
   mutate(tot_n = sum(Count)) |>
   filter(FFG == "shredder") |>
@@ -175,6 +176,7 @@ a3.2
 ```{r}
 shannon <- two_sites |> 
   select(site_code, Taxon, Count) |>
+  group_by(site_code) |>
   mutate(tot_n = sum(Count),
          pi = Count / tot_n,
          ln_pi = log(pi),
@@ -195,6 +197,7 @@ a3.3
 ```{r}
 c_ind <- two_sites|>
   select(site_code, Family, Count) |>
+  group_by(site_code) |>
   mutate(tot_n = sum(Count)) |>
   filter(Family == "Chironomidae") |>
   group_by(site_code, tot_n) |>
@@ -217,6 +220,7 @@ This sub-problem is optional. Problem number 4 is not optional
 ```{r}
 ept_no_b <- two_sites |>
   select(site_code, Order, Family, Count) |>
+  group_by(site_code) |>
   mutate(tot_n = sum(Count)) |>
   filter(Order == "Ephemeroptera" |
            Order == "Plecoptera" |

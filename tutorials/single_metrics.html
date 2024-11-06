@@ -375,7 +375,12 @@ Richness</a></li>
 <li><a href="#ept-richness" id="toc-ept-richness">EPT richness</a></li>
 </ul></li>
 <li><a href="#shannon-diversity" id="toc-shannon-diversity">Shannon
-Diversity</a></li>
+Diversity</a>
+<ul>
+<li><a href="#interpretation-of-shannon-diversity" id="toc-interpretation-of-shannon-diversity">Interpretation of Shannon
+diversity</a></li>
+<li><a href="#calculating-h" id="toc-calculating-h">Calculating <span class="math inline">\(H\)</span></a></li>
+</ul></li>
 <li><a href="#number-of-individuals-metrics" id="toc-number-of-individuals-metrics">Number of individuals metrics</a>
 <ul>
 <li><a href="#percent-of-ept-individuals" id="toc-percent-of-ept-individuals">Percent of EPT individuals</a></li>
@@ -496,12 +501,15 @@ category (reference or impacted)</li>
 <p>You should have already downloaded R and RStudio (in that order) on
 your personal laptops, or you are using a departmental computer which
 has it downloaded already.</p>
-<p>Either way, we need to prepare the workspace before we bgein.</p>
+<p>Either way, we need to prepare the workspace before we begin.</p>
 <ul>
 <li>Start by opening Rstudio<br />
 </li>
 <li>Follow along in class to create a project called
-<code>ENVS337</code>
+<code>ENVS337</code><br />
+</li>
+<li>The most important pat is under Tools &gt; Global Options make sure
+to set “save workspace to .Rdata” to Never.
 <ul>
 <li>If you missed class, there should be a panopto recording of how to
 do this<br />
@@ -564,15 +572,15 @@ taxa_info &lt;- read_excel(&quot;data/MMI_HW_data.xlsx&quot;,
 ## 6 A75CC     Cinygmula            7</code></pre>
 <pre class="r"><code>head(taxa_info)</code></pre>
 <pre><code>## # A tibble: 6 × 10
-##   Taxon           Phylum Class Order Family Genus Habit FFG   Biotype1_sensitive
-##   &lt;chr&gt;           &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;lgl&gt;             
-## 1 Heterlimnius    Arthr… Inse… Cole… Elmid… Hete… clin… coll… FALSE             
-## 2 Elmidae         Arthr… Inse… Cole… Elmid… &lt;NA&gt;  clin… coll… FALSE             
-## 3 Atherix         Arthr… Inse… Dipt… Ather… Athe… spra… pred… FALSE             
-## 4 Bibiocephala    Arthr… Inse… Dipt… Bleph… Bibi… clin… scra… TRUE              
-## 5 Probezzia       Arthr… Inse… Dipt… Cerat… Prob… spra… pred… FALSE             
-## 6 Cricotopus_Ort… Arthr… Inse… Dipt… Chiro… Cric… burr… coll… FALSE             
-## # ℹ 1 more variable: biotype1_tolerant &lt;lgl&gt;</code></pre>
+##   Taxon         Phylum    Class   Order  Family Genus Habit FFG   sensitive_taxa
+##   &lt;chr&gt;         &lt;chr&gt;     &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;lgl&gt;         
+## 1 Ameletus      Arthropod Insecta Ephem… Amele… Amel… clin… scra… TRUE          
+## 2 Atherix       Arthropod Insecta Dipte… Ather… Athe… spra… pred… FALSE         
+## 3 Baetis        Arthropod Insecta Ephem… Baeti… Baet… swim… coll… FALSE         
+## 4 Bibiocephala  Arthropod Insecta Dipte… Bleph… Bibi… clin… scra… FALSE         
+## 5 Brachycentrus Arthropod Insecta Trich… Brach… Brac… clin… filt… FALSE         
+## 6 Capnia        Arthropod Insecta Pleco… Capni… Capn… spra… shre… FALSE         
+## # ℹ 1 more variable: Bio2_sensitive &lt;lgl&gt;</code></pre>
 <ul>
 <li>We will now “join” the two objects together this way</li>
 </ul>
@@ -588,7 +596,7 @@ taxa_info &lt;- read_excel(&quot;data/MMI_HW_data.xlsx&quot;,
 ## 4 A75CC     Drunella_grandis     6 Arthrop… Inse… Ephe… Ephem… Drun… clin… scra…
 ## 5 A75CC     Ephemerella          6 Arthrop… Inse… Ephe… Ephem… Ephe… clin… coll…
 ## 6 A75CC     Cinygmula            7 Arthrop… Inse… Ephe… Hepta… Ciny… clin… scra…
-## # ℹ 2 more variables: Biotype1_sensitive &lt;lgl&gt;, biotype1_tolerant &lt;lgl&gt;</code></pre>
+## # ℹ 2 more variables: sensitive_taxa &lt;lgl&gt;, Bio2_sensitive &lt;lgl&gt;</code></pre>
 </div>
 <div id="simple-metrics" class="section level2">
 <h2>Simple metrics</h2>
@@ -672,7 +680,7 @@ harder to calculate: the number of Ephemeroptera taxa<br />
 ## 6 A75CC     Cinygmula            7 Arthrop… Inse… Ephe… Hepta… Ciny… clin… scra…
 ## 7 A75CC     Epeorus             65 Arthrop… Inse… Ephe… Hepta… Epeo… clin… scra…
 ## 8 A75CC     Rhithrogena         20 Arthrop… Inse… Ephe… Hepta… Rhit… clin… scra…
-## # ℹ 2 more variables: Biotype1_sensitive &lt;lgl&gt;, biotype1_tolerant &lt;lgl&gt;</code></pre>
+## # ℹ 2 more variables: sensitive_taxa &lt;lgl&gt;, Bio2_sensitive &lt;lgl&gt;</code></pre>
 <ul>
 <li>The <code>filter()</code> command looks for rows inside of the
 <code>Order</code> column which are equal to
@@ -703,10 +711,10 @@ Ephemeroptera, we would write this:</li>
 ##  6 A75CC     Skwala                2 Arthr… Inse… Plec… Perlo… Skwa… clin… pred…
 ##  7 A75CC     Taenionema            5 Arthr… Inse… Plec… Taeni… Taen… spra… shre…
 ##  8 A75CC     Brachycentrus         1 Arthr… Inse… Tric… Brach… Brac… clin… filt…
-##  9 A75CC     Arctopsyche          45 Arthr… Inse… Tric… Hydro… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
-## 10 A75CC     Hydropsyche          47 Arthr… Inse… Tric… Hydro… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+##  9 A75CC     Arctopsyche          45 Arthr… Inse… Tric… Hydro… &lt;NA&gt;  clin… filt…
+## 10 A75CC     Hydropsyche          47 Arthr… Inse… Tric… Hydro… &lt;NA&gt;  clin… filt…
 ## # ℹ 22 more rows
-## # ℹ 2 more variables: Biotype1_sensitive &lt;lgl&gt;, biotype1_tolerant &lt;lgl&gt;</code></pre>
+## # ℹ 2 more variables: sensitive_taxa &lt;lgl&gt;, Bio2_sensitive &lt;lgl&gt;</code></pre>
 <ul>
 <li>back to the Ephermoptera richness…</li>
 </ul>
@@ -723,7 +731,7 @@ Ephemeroptera, we would write this:</li>
 ## 6 A75CC     Cinygmula            7 Arthrop… Inse… Ephe… Hepta… Ciny… clin… scra…
 ## 7 A75CC     Epeorus             65 Arthrop… Inse… Ephe… Hepta… Epeo… clin… scra…
 ## 8 A75CC     Rhithrogena         20 Arthrop… Inse… Ephe… Hepta… Rhit… clin… scra…
-## # ℹ 2 more variables: Biotype1_sensitive &lt;lgl&gt;, biotype1_tolerant &lt;lgl&gt;</code></pre>
+## # ℹ 2 more variables: sensitive_taxa &lt;lgl&gt;, Bio2_sensitive &lt;lgl&gt;</code></pre>
 <ul>
 <li>This gives us all the rows where the order is equal to
 Ephemeroptera<br />
@@ -787,7 +795,7 @@ OR statement</li>
 ## 13 A75CC     Isoperla              2 Arthr… Inse… Plec… Perlo… Isop… clin… pred…
 ## 14 A75CC     Skwala                2 Arthr… Inse… Plec… Perlo… Skwa… clin… pred…
 ## 15 A75CC     Taenionema            5 Arthr… Inse… Plec… Taeni… Taen… spra… shre…
-## # ℹ 2 more variables: Biotype1_sensitive &lt;lgl&gt;, biotype1_tolerant &lt;lgl&gt;</code></pre>
+## # ℹ 2 more variables: sensitive_taxa &lt;lgl&gt;, Bio2_sensitive &lt;lgl&gt;</code></pre>
 <ul>
 <li>Now we have both the mayflies and stoneflies, and we can get the
 caddisflies with one more or (<code>|</code>) statement</li>
@@ -815,10 +823,10 @@ caddisflies with one more or (<code>|</code>) statement</li>
 ## 14 A75CC     Skwala                2 Arthr… Inse… Plec… Perlo… Skwa… clin… pred…
 ## 15 A75CC     Taenionema            5 Arthr… Inse… Plec… Taeni… Taen… spra… shre…
 ## 16 A75CC     Brachycentrus         1 Arthr… Inse… Tric… Brach… Brac… clin… filt…
-## 17 A75CC     Arctopsyche          45 Arthr… Inse… Tric… Hydro… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
-## 18 A75CC     Hydropsyche          47 Arthr… Inse… Tric… Hydro… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+## 17 A75CC     Arctopsyche          45 Arthr… Inse… Tric… Hydro… &lt;NA&gt;  clin… filt…
+## 18 A75CC     Hydropsyche          47 Arthr… Inse… Tric… Hydro… &lt;NA&gt;  clin… filt…
 ## 19 A75CC     Rhyacophila_sibi…     6 Arthr… Inse… Tric… Rhyac… Rhya… clin… pred…
-## # ℹ 2 more variables: Biotype1_sensitive &lt;lgl&gt;, biotype1_tolerant &lt;lgl&gt;</code></pre>
+## # ℹ 2 more variables: sensitive_taxa &lt;lgl&gt;, Bio2_sensitive &lt;lgl&gt;</code></pre>
 <ul>
 <li>And adding the other code to get the count</li>
 </ul>
@@ -861,6 +869,14 @@ community<br />
 <p><span class="math display">\[ H = -\sum p_i \log p_i\]</span> Where
 <span class="math inline">\(p_i\)</span> is the proportion of
 individuals in taxa <span class="math inline">\(i\)</span>.</p>
+<div id="interpretation-of-shannon-diversity" class="section level3">
+<h3>Interpretation of Shannon diversity</h3>
+<p>Higher values of <span class="math inline">\(H\)</span> indicate
+higher diversity values. An <span class="math inline">\(H\)</span> of 0
+indicates that only a single species is present in the community.</p>
+</div>
+<div id="calculating-h" class="section level3">
+<h3>Calculating <span class="math inline">\(H\)</span></h3>
 <ul>
 <li>This equation might look daunting, but it’s actually fairly easy to
 calculate in R<br />
@@ -968,6 +984,7 @@ shannon</code></pre>
 ##   site_code tot_rich E_rich EPT_rich     H
 ##   &lt;chr&gt;        &lt;int&gt;  &lt;int&gt;    &lt;int&gt; &lt;dbl&gt;
 ## 1 A75CC           44      8       19  2.97</code></pre>
+</div>
 </div>
 <div id="number-of-individuals-metrics" class="section level2">
 <h2>Number of individuals metrics</h2>
@@ -1170,7 +1187,7 @@ columns to our new object</p></li>
 ## 4 A75CC     Drunella_grandis     6 Arthrop… Inse… Ephe… Ephem… Drun… clin… scra…
 ## 5 A75CC     Ephemerella          6 Arthrop… Inse… Ephe… Ephem… Ephe… clin… coll…
 ## 6 A75CC     Cinygmula            7 Arthrop… Inse… Ephe… Hepta… Ciny… clin… scra…
-## # ℹ 2 more variables: Biotype1_sensitive &lt;lgl&gt;, biotype1_tolerant &lt;lgl&gt;</code></pre>
+## # ℹ 2 more variables: sensitive_taxa &lt;lgl&gt;, Bio2_sensitive &lt;lgl&gt;</code></pre>
 <div id="re-calculate-results-with-two-sites" class="section level3">
 <h3>Re-calculate results with two sites</h3>
 <ul>
@@ -1214,6 +1231,7 @@ ephem_rich</code></pre>
 ## 2 A75CC          8</code></pre>
 <pre class="r"><code>ept_ind &lt;- two_sites |&gt;
   select(site_code, Order, Count) |&gt;
+  group_by(site_code) |&gt;
   mutate(tot_n = sum(Count)) |&gt;
   filter(Order == &quot;Ephemeroptera&quot; |
            Order == &quot;Plecoptera&quot; |
@@ -1229,8 +1247,8 @@ ephem_rich</code></pre>
 ## # Groups:   site_code [2]
 ##   site_code ept_percent_ind
 ##   &lt;chr&gt;               &lt;dbl&gt;
-## 1 A72                 0.160
-## 2 A75CC               0.612</code></pre>
+## 1 A72                 0.890
+## 2 A75CC               0.746</code></pre>
 <pre class="r"><code>two_sites_results &lt;- left_join(total_rich, ephem_rich)</code></pre>
 <pre><code>## Joining with `by = join_by(site_code)`</code></pre>
 <pre class="r"><code>two_sites_results &lt;- left_join(two_sites_results, ept_ind)</code></pre>
@@ -1239,8 +1257,8 @@ ephem_rich</code></pre>
 <pre><code>## # A tibble: 2 × 4
 ##   site_code tot_rich E_rich ept_percent_ind
 ##   &lt;chr&gt;        &lt;int&gt;  &lt;int&gt;           &lt;dbl&gt;
-## 1 A72             12      1           0.160
-## 2 A75CC           44      8           0.612</code></pre>
+## 1 A72             12      1           0.890
+## 2 A75CC           44      8           0.746</code></pre>
 <blockquote>
 <p>Work on problem 3 on homework assignment.</p>
 </blockquote>

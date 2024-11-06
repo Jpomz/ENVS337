@@ -58,7 +58,7 @@ The following table describes the metrics for Biotype 2.
 |:-----------|:-----------|:-------:|
 |TotalTax| Total Number of Taxa| $100 * m / 42$|
 |aEPTTax| Total number of EPT taxa| $100 * m / 24.5$|
-|pEPTnoB| Percent of individuals which are EPT taxa *except* for the Baetidae Family| $100 * m / 79.3$|
+|pi_EPTnoB| Percent of individuals which are EPT taxa *except* for the Baetidae Family| $100 * m / 79.3$|
 |ClingerTax| Total number of Clinger Taxa| $100 * m / 20$|
 |IntolerantTax| Number of taxa which are classified as sensitive for Biotype 2| $100 * m / 21$|
 |pi_SensitiveTax| Percent of individuals which are classified as sensitive for Biotype 1 or Biotype 2| $100 * m / 72.3$|
@@ -229,6 +229,7 @@ all_sites |>
 
 * Here, we will need to use a new bit of the data that we haven't worked with before  
 * There is a column called `sensitive_taxa` which has values of `TRUE` if it is classified as a sensitive taxa in either biotype 1 or biotype 2, and `FALSE` if it is not classified as sensitive.  
+  * The `Bio2_sensitive` has values of `TRUE` for taxa which are designated as sensitive in Biotype 2 only.  
 * We will use `filter()` to keep only the `TRUE` values.  
 * We will then group the data by site, total n and the sensitive taxa column  
 * Then we will sum the number of individuals in the `TRUE` category which can be used to calculate the percentage  
@@ -291,10 +292,15 @@ mmi
 
 ### Join site_info  
 
+* Read in the `site_info` sheet from your data
+
 ```{r, eval=FALSE}
 site_info <- read_excel("data/MMI_HW_data.xlsx",
                         sheet = "site_info")
 ```
+
+* This has information on the site name as well as the downstream location and which sets of sites will be analyzed in a pairwise fashion.  
+* We can join this to our `mmi` result with the following:  
 
 ```{r}
 mmi <- left_join(mmi, site_info)
@@ -303,11 +309,56 @@ mmi
 
 ## Plots  
 
+* We are going to have two different types of plots  
+
+1) Pairwise plots  
+
+  * This will compare an impacted site with an unimpacted site close by  
+  * Unimpacted sites are either above the contamination (`Animas_upper`) or an unaffected tributary close to the main stem of the Animas River (`Elk_Cr` and `Cascade_Cr`)  
+  
 ### Pairwise plots  
-Pairwise (ref, impact):
-A = A68, A72
-B = A73EC, A73
-C = A75CC, A75D
+
+* Let's start with the pairwise plots  
+* We will be comparing:  
+  * A68 (reference) with A72 (Impacted Animas site)    
+  
+  * A73EC (reference) with A73 (Impacted Animas site)  
+  
+  * A75CC (reference) with A75D(Impacted Animas site)  
+  
+* The site info has a column called `pairwise` which has unique designations for each pairwise comparison (`Animas_upper`, `Elk_Cr`, `Cascade_Cr`)  
+
+
+#### Basic plot setup  
+
+* We are interested in creating a bar chart with the site on the x-axis and the mean MMI score on the y-axis.  
+* We can use a special function called `facet_wrap()` to make a panel for each pairwise comparison.  
+
+```{r}
+mmi |>
+  ggplot(aes(x = site_code,
+             y = mmi_mean,
+             fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~pairwise)
+```
+* This has all the information we want, but we can make this plot better.  
+* The `NA` panel has sites which are not part of the pairwise comparisons (used in the next step) and we can remove these with a special `filter()` command. 
+
+```{r}
+mmi |>
+  filter(!is.na(pairwise)) |>
+  ggplot(aes(x = site_code,
+             y = mmi_mean,
+             fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~pairwise)
+```
+
+* This is better, but we still need to fix the x-axis  
+* also note that the order of `impact` and `reference` varies across the panels.  
+* We can actually deal with both of these problems by changing the `x` argument to be `impact_category`. 
+
 
 ```{r}
 mmi |>
@@ -316,18 +367,48 @@ mmi |>
              y = mmi_mean,
              fill = impact_category)) +
   geom_bar(stat = "identity") +
-  facet_wrap(~pairwise,
-             scales = "free_x")
+  facet_wrap(~pairwise)
 ```
 
+* Remember that we don't want to interpret this plot here because the MMI scores are not yet "complete" (more metrics to calculate in your assignment)  
+* However, just for reference/practice, Note that the higher reference bars in the Cascade and Elk Creeks indicate that these sites are "better" (higher MMI mean) than the impacted bars.  
+* The Animas Upper sites are less different and currently appear to have similar scores, but this may change after you calculate the rest of the metrics.  
 
+* You may also recall from lecture that there are three benchmark values in the MMI scores which roughly delineate "good", "bad", and "indeterminate" stream quality.  
+* For Biotype 2, these divisions are at a score of > 48 and < 40  
+* we can add reference lines to our graph to make these distinctions more apparent  
+
+#### This is the code to use for your assignment  
+
+```{r}
+mmi |>
+  filter(!is.na(pairwise)) |>
+  ggplot(aes(x = impact_category,
+             y = mmi_mean,
+             fill = impact_category)) +
+  geom_bar(stat = "identity") +
+  geom_hline(aes(yintercept = 48)) +
+  geom_hline(aes(yintercept = 40)) +
+  facet_wrap(~pairwise)
+```
+
+* The above code makes the plot that you will need for your assignment  
+* Interpretation:  
+  * Bars above the top line are in attainment ("good")  
+  * Bars in between the lines are indeterminate ("gray zone")  
+  * Bars below both lines are not in attainment ("bad")  
 
 ### Longitudinal plots  
 
-Longitudinal
-A55, A60, A68 | A72, A73, A75D
-
-* Now we can bind that to our results and make a plot  
+* The last type of plot we will make is looking at the longitudinal (downstream) effects of the contamination spill.  
+* The site info sheet has a column called `distance` which orders the sites on the main stem of the Animas River, and will be used on our x-axis    
+* The sites, in order, are:  
+  * A55, A60, A68 (Above contamination) | A72, A73, A75D (Below contamination)  
+  
+* The main point of this plot is to see if the impacts of the spill are different further down in the watershed  
+  * For example, we might expect the impacts to decline further down, as more tributaries come in and dilute the contamination  
+* We can use `fill = impact_category` again to highlight which streams are above and below the contamination  
+* As before, we will filter out the `NA` values which are for the tributary sites  
 
 ```{r}
 mmi |>
@@ -335,7 +416,10 @@ mmi |>
   ggplot(aes(x = distance,
              y = mmi_mean,
              fill = impact_category)) +
-  geom_bar(stat = "identity")
+  geom_bar(stat = "identity")  +
+  geom_hline(aes(yintercept = 48)) +
+  geom_hline(aes(yintercept = 40))
 ```
 
+#### This concludes the MMI tutorial  
 
