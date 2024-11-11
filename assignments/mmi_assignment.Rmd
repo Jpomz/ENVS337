@@ -61,23 +61,8 @@ all_sites <- left_join(all_sites, taxa_info)
 
 ```
 
-## Problem 1: pi_EPTnoB  
 
-Calculate the score for the percent of individuals in EPT except in the Baetidae family.   
-
-The following bullet points are an outline (in order) of the actions that need to occur to complete this calculation  
-
-* First, group the data by site code by using `group_by(site_code)`  
-* Use `mutate()` to calculate the total number of individuals in each site  
-* Use `filter()` to **INCLUDE** EPT taxa  
-* In the same `filter()` command, be sure to **EXCLUDE** the Baetidae family  
-* Group your data by `site_code` and the total number of individuals per site (in the tutorial for "pi_SensitiveTax" this was named `tot_n`)  
-* Use `summarize()` to sum the total number of individuals left in the data (i.e., `sum(Count))`  
-* Use `mutate()` to calculate the metric (number of EPT_no_B / tot_n) and the score ($100 * metric / 79.3$)  
-* use `select()` to only keep the `site_code` and the name of the column of the score you just created.  
-* display your final results in the console  
-
-## Problem 2: ClingerTax  
+## Problem 1: ClingerTax  
 
 Calculate the score for the number of "Clinger" taxa.  
 
@@ -94,7 +79,7 @@ The following bullet points are an outline (in order) of the actions that need t
 * use `select()` to only keep the `site_code` and the name of the column of the score you just created.  
 * display your final results in the console  
 
-## Problem 3: IntolerantTax  
+## Problem 2: IntolerantTax  
 
 Calculate the score for the number of "Intolerant" taxa.  
 
@@ -111,7 +96,7 @@ The following bullet points are an outline (in order) of the actions that need t
 * use `select()` to only keep the `site_code` and the name of the column of the score you just created.  
 * display your final results in the console  
 
-## Problem 4: PredatorTax  
+## Problem 3: PredatorTax  
 
 Calculate the score for the number of "predator" taxa.  
 
@@ -129,7 +114,7 @@ The following bullet points are an outline (in order) of the actions that need t
 * display your final results in the console  
 
 
-## Problem 5: pi_ScraperTax  
+## Problem 4: pi_ScraperTax  
 
 Calculate the score for the percent of individuals that are in the "scraper" FFG.  
 
@@ -144,6 +129,23 @@ The following bullet points are an outline (in order) of the actions that need t
   
 * use `select()` to only keep the `site_code` and the name of the column of the score you just created.  
 * display your final results in the console  
+
+## Problem 5: pi_EPTnoB  
+
+Calculate the score for the percent of individuals in EPT except in the Baetidae family.   
+
+The following bullet points are an outline (in order) of the actions that need to occur to complete this calculation  
+
+* First, group the data by site code by using `group_by(site_code)`  
+* Use `mutate()` to calculate the total number of individuals in each site  
+* Use `filter()` to **INCLUDE** EPT taxa  
+* In the same `filter()` command, be sure to **EXCLUDE** the Baetidae family  
+* Group your data by `site_code` and the total number of individuals per site (in the tutorial for "pi_SensitiveTax" this was named `tot_n`)  
+* Use `summarize()` to sum the total number of individuals left in the data (i.e., `sum(Count))`  
+* Use `mutate()` to calculate the metric (number of EPT_no_B / tot_n) and the score ($100 * metric / 79.3$)  
+* use `select()` to only keep the `site_code` and the name of the column of the score you just created.  
+* display your final results in the console  
+
 
 ## Problem 6: Metrics from Tutorial  
 

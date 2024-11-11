@@ -3,8 +3,8 @@ title: "MMI Assignment"
 author: "Justin Pomeranz"
 subtitle: "SOLUTION KEY"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -32,8 +32,60 @@ all_sites <- left_join(all_sites, taxa_info)
 
 ## This is the KEY  
 
+## Problem 1: ClingerTax  
 
-## Problem 1: pi_EPTnoB  
+```{r}
+clng <- all_sites |>
+  filter(Habit == "clinger") |>
+  group_by(site_code) |>
+  summarize(cling_tax = n()) |>
+  mutate(s_cling = 100 * cling_tax / 20) |>
+  select(-cling_tax)
+clng
+```
+
+## Problem 2: IntolerantTax  
+
+```{r}
+intolTax <- all_sites |>
+  group_by(site_code) |>
+  filter(Bio2_sensitive == TRUE) |>
+  summarise(n_sens = n()) |>
+  mutate(s_intol = 100*n_sens / 21) |>
+  select(site_code, s_intol)
+intolTax
+```
+
+
+## Problem 3: PredatorTax  
+
+```{r}
+pred <- all_sites |>
+  filter(FFG == "predator") |>
+  group_by(site_code) |>
+  summarize(pred_tax = n()) |>
+  mutate(s_pred = 100 * pred_tax / 13) |>
+  select(-pred_tax)
+pred
+```
+
+## Problem 4: pi_ScraperTax  
+
+```{r}
+pi_scraper <- all_sites |>
+  group_by(site_code) |>
+  mutate(tot_n = sum(Count)) |>
+  filter(FFG == "scraper") |>
+  group_by(site_code, tot_n) |>
+  summarise(n_scrape = sum(Count)) |>
+  ungroup() |>
+  mutate(pi_scrape = n_scrape / tot_n * 100,
+         s_scrape = 100*pi_scrape / 44.2) |>
+  select(site_code, s_scrape)
+pi_scraper
+```
+
+## Problem 5: pi_EPTnoB  
 
 ```{r}
 pi_no_b <- all_sites |>
@@ -50,59 +102,6 @@ pi_no_b <- all_sites |>
          s_pi_no_b = 100*pi_no_b / 79.3) |>
   select(site_code, s_pi_no_b)
 pi_no_b
-```
-
-## Problem 2: ClingerTax  
-
-```{r}
-clng <- all_sites |>
-  filter(Habit == "clinger") |>
-  group_by(site_code) |>
-  summarize(cling_tax = n()) |>
-  mutate(s_cling = 100 * cling_tax / 20) |>
-  select(-cling_tax)
-clng
-```
-
-## Problem 3: IntolerantTax  
-
-```{r}
-intolTax <- all_sites |>
-  group_by(site_code) |>
-  filter(Bio2_sensitive == TRUE) |>
-  summarise(n_sens = n()) |>
-  mutate(s_intol = 100*n_sens / 21) |>
-  select(site_code, s_intol)
-intolTax
-```
-
-
-## Problem 4: PredatorTax  
-
-```{r}
-pred <- all_sites |>
-  filter(FFG == "predator") |>
-  group_by(site_code) |>
-  summarize(pred_tax = n()) |>
-  mutate(s_pred = 100 * pred_tax / 13) |>
-  select(-pred_tax)
-pred
-```
-
-## Problem 5: pi_ScraperTax  
-
-```{r}
-pi_scraper <- all_sites |>
-  group_by(site_code) |>
-  mutate(tot_n = sum(Count)) |>
-  filter(FFG == "scraper") |>
-  group_by(site_code, tot_n) |>
-  summarise(n_scrape = sum(Count)) |>
-  ungroup() |>
-  mutate(pi_scrape = n_scrape / tot_n * 100,
-         s_scrape = 100*pi_scrape / 44.2) |>
-  select(site_code, s_scrape)
-pi_scraper
 ```
 
 ## Problem 6: Metrics from Tutorial  
