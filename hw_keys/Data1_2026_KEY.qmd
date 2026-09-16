@@ -1,0 +1,58 @@
+---
+title: "Key Data 1"
+subtitle: "Fall 2026"
+execute: 
+  echo: true
+  eval: true
+  message: false
+  warning: false
+format: html
+editor: visual
+toc: true
+toc-depth: 2
+embed-resources: true
+theme:
+  light: flatly
+  dark: darkly
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(tidyverse)
+bp <- read_csv(here::here("data/bonita_peak.csv"))
+```
+
+## Overview
+
+You will calculate some simple metrics for two sites from the Bonita Peak data set. The calculations will largely follow the tutorial from class. In addition to your calculations, you will need to interpret the results and answer some questions.
+
+## Set up
+
+-   Load the `tidyverse` library
+
+-   Read in the data
+
+```{r}
+#| eval: false
+# library
+library(tidyverse)
+
+# data
+bp <- read_csv(here::here("data/bonita_peak.csv"))
+```
+
+## Modify data to keep two different sites
+
+-   make an object called `data` which only has data from the following two `site_id` values
+
+    -   `"MFMaM"`
+
+    -   `"MAGaA"`
+
+# Calculations
+
+## Richness
+
+1.  Calculate the total richness in your two sites. Make sure to save it as a data object.

@@ -1,0 +1,148 @@
+---
+title: "Data 1 2026 NOTES"
+format: html
+editor: visual
+---
+
+## Overview
+
+This is the quarto which runs the data 1 analysis on all the BP data
+
+## Setup and Data
+
+```{r}
+#| label: setup
+#| include: false
+
+library(tidyverse)
+bp <- read_csv(here::here("data/bonita_peak.csv"))
+```
+
+```{r}
+#| eval: false
+# libraries
+
+library(tidyverse)
+```
+
+```{r}
+#| eval: false
+# data
+
+bp <- read_csv(here::here("data/bonita_peak.csv"))
+```
+
+## View data
+
+```{r}
+bp
+```
+
+# Calculate Metrics
+
+## Richness
+
+```{r}
+total_rich <- bp |>
+  distinct(site_id, taxon) |>
+  group_by(site_id) |>
+  summarise(total_rich = n())
+total_rich
+```
+
+## E Richness
+
+```{r}
+E_rich <- bp |>
+  filter(order == "Ephemeroptera") |>
+  distinct(site_id, taxon) |>
+  group_by(site_id) |>
+  summarise(EPT_rich = n())
+
+E_rich
+```
+
+```{r}
+full_join(total_rich, E_rich, )
+# NA = 0
+```
+
+## EP Richness
+
+```{r}
+bp |>
+  filter(order == "Ephemeroptera" |
+           order == "Plecoptera") |>
+  distinct(site_id, taxon) |>
+  group_by(site_id) |>
+  summarise(EPT_rich = n())
+
+```
+
+## EPT Richness
+
+```{r}
+ept_rich <- bp |>
+  filter(order == "Ephemeroptera" |
+           order == "Plecoptera" |
+           order == "Trichoptera") |>
+  distinct(site_id, taxon) |>
+  group_by(site_id) |>
+  summarise(EPT_rich = n())
+
+```
+
+# % EPT individuals
+
+```{r}
+ept_per_n <- bp |>
+  filter(order == "Ephemeroptera" |
+           order == "Plecoptera" |
+           order == "Trichoptera") |>
+  group_by(site_id, total_count) |>
+  summarize(ept_n = sum(count)) |>
+  mutate(ept_percent_ind = ept_n / total_count)
+```
+
+# % Chironomidae individuals
+
+```{r}
+chiro_per_n <- bp |>
+  filter(family == "Chironomidae") |>
+  group_by(site_id, total_count) |>
+  summarize(chiro_n = sum(count)) |>
+  mutate(chiro_percent_ind = chiro_n / total_count)
+```
+
+## Shannon
+
+```{r}
+shannon <- bp |> 
+  select(site_id, taxon, count, total_count) |>
+  mutate(pi = count / total_count,
+         ln_pi = log(pi),
+         pi_ln_pi = pi*ln_pi) |>
+  group_by(site_id) |>
+  summarize(H = -sum(pi_ln_pi))
+```
+
+# join
+
+```{r}
+results <- full_join(total_rich,
+                     ept_rich) |>
+  full_join(ept_per_n) |>
+  full_join(chiro_per_n) |>
+  full_join(shannon)
+```
+
+# view results for 4 sites
+
+```{r}
+results |>
+  filter(site_id =="BUaNFA" |
+           site_id =="MFMaM" |
+           site_id =="MAGaA" |
+           site_id =="NFAaBU")
+
+```

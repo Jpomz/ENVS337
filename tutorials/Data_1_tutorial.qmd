@@ -1,0 +1,209 @@
+---
+title: "Data 1 Tutorial"
+format: html
+editor: visual
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(tidyverse)
+bp <- read_csv(here::here("data/bonita_peak.csv"))
+```
+
+# Overview
+
+This is the quarto which runs the data 1 analysis on all the BP data
+
+# Setup and Data
+
+## Download and attach library
+
+```{r}
+#| eval: false
+# libraries
+
+# run this just once on each machine
+# install.packages("tidyverse")
+
+# load this EVERY time you start R
+library(tidyverse)
+```
+
+## Data
+
+-   Download data from D2L and put it in your `data/` folder.
+-   Load the data into your RStudio session
+
+```{r}
+#| eval: false
+# data
+
+bp <- read_csv(here::here("data/bonita_peak.csv"))
+```
+
+### View data
+
+```{r}
+bp
+```
+
+### Filter data to two example sites
+
+-   We will be just looking at two sites around Burrows Creek
+
+::: callout-important
+## Homework Note
+
+-   You will be looking at two different sites in your Homework
+
+-   Be sure to change the code in your homework script appropriately.
+:::
+
+```{r}
+burrows <- bp |>
+  filter(site_id =="BUaNFA" |
+           site_id =="NFAaBU")
+burrows
+```
+
+# Calculate Metrics
+
+## Richness
+
+```{r}
+total_rich <- burrows |>
+  distinct(stream, taxon) |>
+  group_by(stream) |>
+  summarise(total_rich = n())
+total_rich
+```
+
+## E Richness
+
+```{r}
+E_rich <- burrows |>
+  filter(order == "Ephemeroptera") |>
+  distinct(stream, taxon) |>
+  group_by(stream) |>
+  summarise(EPT_rich = n())
+
+E_rich
+```
+
+## EP Richness
+
+```{r}
+EP_rich <- burrows |>
+  filter(order == "Ephemeroptera" |
+           order == "Plecoptera") |>
+  distinct(stream, taxon) |>
+  group_by(stream) |>
+  summarise(EPT_rich = n())
+
+```
+
+::: callout-important
+## Homework Note
+
+-   For your HW, you will calculate E, P, T richness separately, as well as the combined EPT richness
+:::
+
+## EPT Richness
+
+```{r}
+ept_rich <- burrows |>
+  filter(order == "Ephemeroptera" |
+           order == "Plecoptera" |
+           order == "Trichoptera") |>
+  distinct(stream, taxon) |>
+  group_by(stream) |>
+  summarise(EPT_rich = n())
+
+```
+
+# % EPT individuals
+
+```{r}
+ept_per_n <- burrows |>
+  filter(order == "Ephemeroptera" |
+           order == "Plecoptera" |
+           order == "Trichoptera") |>
+  group_by(stream, total_count) |>
+  summarize(ept_n = sum(count)) |>
+  mutate(ept_percent_ind = ept_n / total_count)
+```
+
+::: callout-important
+## Homework Note
+
+-   For your HW, you will also calculate the percent Chironomidae individuals.
+:::
+
+# % Chironomidae individuals
+
+```{r}
+chiro_per_n <- burrows |>
+  filter(family == "Chironomidae") |>
+  group_by(stream, total_count) |>
+  summarize(chiro_n = sum(count)) |>
+  mutate(chiro_percent_ind = chiro_n / total_count)
+```
+
+## Shannon
+
+$$
+H = - \Sigma \, p_i \, log \, p_i
+$$
+
+Where $p_i$ is the proportion of taxon $i$
+
+```{r}
+shannon <- burrows |> 
+  select(stream, taxon, count, total_count) |>
+  mutate(pi = count / total_count,
+         ln_pi = log(pi),
+         pi_ln_pi = pi*ln_pi) |>
+  group_by(stream) |>
+  summarize(H = -sum(pi_ln_pi))
+```
+
+# Join Results
+
+```{r}
+results <- full_join(total_rich,
+                     ept_rich) |>
+  full_join(ept_per_n) |>
+  full_join(chiro_per_n) |>
+  full_join(shannon)
+```
+
+# view results for 4 sites
+
+```{r}
+results 
+
+```
+
+# Plot Results
+
+```{r}
+results |>
+  ggplot(aes(x = stream,
+             y = total_rich)) +
+  geom_col() +
+  labs(x = "Site", 
+       y = "Taxa Richness",
+       title = "Taxa Richness")
+```
+
+```{r}
+results |>
+  ggplot(aes(x = stream,
+             y = H)) +
+  geom_col() +
+  labs(x = "Site", 
+       y = "H",
+       title = "Shannon Diversity")
+```
