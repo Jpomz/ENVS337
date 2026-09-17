@@ -3,3 +3,7 @@
 .RData
 .Ruserdata
 ignore/ 
+
+/.quarto/
+*_cache/
+*_files/
