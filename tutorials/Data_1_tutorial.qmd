@@ -1,7 +1,17 @@
 ---
 title: "Data 1 Tutorial"
-format: html
+format: 
+  html:
+    embed-resources: true
 editor: visual
+toc: true
+toc-depth: 2
+number-sections: true
+theme:
+  light: flatly
+  dark: darkly
+execute: 
+  cache: true
 ---
 
 ```{r}
