@@ -14,7 +14,17 @@ bp <- read_csv(here::here("data/bonita_peak.csv"))
 
 # Overview
 
-This is the quarto which runs the data 1 analysis on all the BP data
+This is the tutorial for Data Module 1. This document will present the information necessary to complete the first data assignment in ENVS337.
+
+# Project setup
+
+-   Make an ENVS337 project
+
+-   Set "save work space image" to never
+
+-   Change pane layout to match in class example
+
+-   Make a `data/` and `plots/` subfolder
 
 # Setup and Data
 
@@ -40,7 +50,7 @@ library(tidyverse)
 #| eval: false
 # data
 
-bp <- read_csv(here::here("data/bonita_peak.csv"))
+bp <- read_csv("data/bonita_peak.csv")
 ```
 
 ### View data
@@ -49,11 +59,45 @@ bp <- read_csv(here::here("data/bonita_peak.csv"))
 bp
 ```
 
+## Data background
+
+-   Mountain Studies Institute (MSI) in Durango/Silverton conducted this study
+
+-   Sampled streams throughout the Bonita Peak Mining District located in San Juan County, CO
+
+    -   [USEPA website](https://www.epa.gov/bpmd)
+
+    -   [CDPHE website](https://cdphe.colorado.gov/hm/bonita-peak-mining-district)
+
+-   Samples included benthic macroinvertebrates as well as water quality data
+
+-   We will look at the macroinvertebrate data here
+
+-   The water quality data will be incorporated in data module 2
+
+## Data structure
+
+-   Each row is the information for one taxon
+
+-   Includes the `stream` name and specific `site` information as well as a unique `site_id`
+
+-   There are columns for the complete taxonomic information for each taxon: `phylum`, `class`, `order`, `family`, and `genus`.
+
+    -   When information is unknown it appears as an `NA` which means "Not Available"
+
+-   The `taxon` column includes the lowest taxonomic information available for that group, typically a Genus name.
+
+-   When the species information is known, the Genus and specific epithet are separated with an underscore
+
+    -   i.e., *Drunella doddsii* appears as" `Drunella_doddssii`
+
+-   There is also information on the `habit` 's and `FFG` 's for each taxon.
+
 ### Filter data to two example sites
 
 -   We will be just looking at two sites around Burrows Creek
 
-::: callout-important
+::: callout-tip
 ## Homework Note
 
 -   You will be looking at two different sites in your Homework
@@ -70,6 +114,24 @@ burrows
 
 # Calculate Metrics
 
+-   We will calculate a number of different metrics in class.
+
+-   Some of these will be exactly the same on the homework assignment
+
+-   Some of the homework problems will require you to modify the code to get the right answer.
+
+## Total abundance
+
+```{r}
+burrows |>
+  group_by(stream) |>
+  distinct(total_count)
+```
+
+-   Note that this result appears in the console and then disappears
+
+-   Below, we will save our results in a new data object for later use.
+
 ## Richness
 
 ```{r}
@@ -79,36 +141,6 @@ total_rich <- burrows |>
   summarise(total_rich = n())
 total_rich
 ```
-
-## E Richness
-
-```{r}
-E_rich <- burrows |>
-  filter(order == "Ephemeroptera") |>
-  distinct(stream, taxon) |>
-  group_by(stream) |>
-  summarise(EPT_rich = n())
-
-E_rich
-```
-
-## EP Richness
-
-```{r}
-EP_rich <- burrows |>
-  filter(order == "Ephemeroptera" |
-           order == "Plecoptera") |>
-  distinct(stream, taxon) |>
-  group_by(stream) |>
-  summarise(EPT_rich = n())
-
-```
-
-::: callout-important
-## Homework Note
-
--   For your HW, you will calculate E, P, T richness separately, as well as the combined EPT richness
-:::
 
 ## EPT Richness
 
@@ -120,8 +152,33 @@ ept_rich <- burrows |>
   distinct(stream, taxon) |>
   group_by(stream) |>
   summarise(EPT_rich = n())
-
+ept_rich
 ```
+
+::: callout-tip
+## Homework Note
+
+-   For your HW, you will also calculate just the T richness
+
+-   To do this, you will modify your `filter()` command to the following:
+
+`filter(order == "Trichoptera") |>`
+:::
+
+## Heptageniidae Richness
+
+-   Modify above code to filter based on the `family` column instead of the `order` column
+
+```{r}
+hept_rich <- burrows |>
+  filter(family == "Heptageniidae") |>
+  distinct(stream, taxon) |>
+  group_by(stream) |>
+  summarise(hept_rich = n())
+hept_rich
+```
+
+-   Note that there are no Heptageniidae in Burrow creek so no line is returned.
 
 # % EPT individuals
 
@@ -133,28 +190,50 @@ ept_per_n <- burrows |>
   group_by(stream, total_count) |>
   summarize(ept_n = sum(count)) |>
   mutate(ept_percent_ind = ept_n / total_count)
+ept_per_n
 ```
 
-::: callout-important
+::: callout-tip
 ## Homework Note
 
--   For your HW, you will also calculate the percent Chironomidae individuals.
+-   For your HW, you will also calculate the percent of individuals in the Chironomidae family
+-   You will need to combine code from both the Heptageniidae and %EPT individuals examples above.
 :::
 
-# % Chironomidae individuals
+## Scraper FFG
+
+-   We will look at the scraper richness next.
+
+-   But first, here is code to show you all the unique values in a column
 
 ```{r}
-chiro_per_n <- burrows |>
-  filter(family == "Chironomidae") |>
-  group_by(stream, total_count) |>
-  summarize(chiro_n = sum(count)) |>
-  mutate(chiro_percent_ind = chiro_n / total_count)
+burrows |>
+  distinct(FFG)
 ```
 
-## Shannon
+::: callout-tip
+## Homework Note
+
+-   Check the exact spelling of the FFG you want
+
+-   The Homework will ask you to look at the richness of the predator FFG
+:::
+
+```{r}
+scraper <- burrows |>
+  filter(FFG == "scraper") |>
+  distinct(stream, taxon) |>
+  group_by(stream) |>
+  summarise(hept_rich = n())
+scraper
+```
+
+-   Note that once again there are no scrapers in Burrow creek, so there is no line in the result.
+
+## Shannon's Diversity Index $H^\prime$
 
 $$
-H = - \Sigma \, p_i \, log \, p_i
+H^\prime = - \Sigma \, p_i \, \ln(p_i)
 $$
 
 Where $p_i$ is the proportion of taxon $i$
@@ -169,27 +248,10 @@ shannon <- burrows |>
   summarize(H = -sum(pi_ln_pi))
 ```
 
-# Join Results
-
-```{r}
-results <- full_join(total_rich,
-                     ept_rich) |>
-  full_join(ept_per_n) |>
-  full_join(chiro_per_n) |>
-  full_join(shannon)
-```
-
-# view results for 4 sites
-
-```{r}
-results 
-
-```
-
 # Plot Results
 
 ```{r}
-results |>
+ total_rich|>
   ggplot(aes(x = stream,
              y = total_rich)) +
   geom_col() +
@@ -198,8 +260,26 @@ results |>
        title = "Taxa Richness")
 ```
 
+-   You can also save this plot as a .png file in your R project
+
 ```{r}
-results |>
+#| eval: false
+ggsave("plots/total_richness.png",
+       units = "in",
+       height = 4,
+       width = 4)
+```
+
+-   Change the `height` and `width` columns as needed to get the right size
+
+-   You will be pasting plots into your homework document.
+
+-   Make sure they are the right size
+
+-   Go back to your script and change the sizes if needed.
+
+```{r}
+shannon |>
   ggplot(aes(x = stream,
              y = H)) +
   geom_col() +
@@ -207,3 +287,27 @@ results |>
        y = "H",
        title = "Shannon Diversity")
 ```
+
+::: callout-tip
+## Homework Note
+
+-   The homework will ask you to make 4 plots
+
+-   Be sure to start with the object that has the result you want
+
+    -   i.e.,`tot_rich`, `shannon`, etc.
+
+-   In `aes()`, x will always be `x = stream`
+
+-   You will need to change the y-axis to whatever you named the column in your object
+
+    -   i.e., `y = total_rich`, `H`, etc.
+
+-   Change the title and y label in the `labs()` argument to match your results.
+:::
+
+# Conclusion
+
+-   This concludes the tutorial
+
+-   You should now be able to calculate all the metrics in the first data assignment
