@@ -1,0 +1,437 @@
+---
+title: "Key Data 2"
+subtitle: "Fall 2026"
+execute: 
+  echo: true
+  eval: true
+  message: false
+  warning: false
+format: html
+editor: visual
+toc: true
+toc-depth: 2
+embed-resources: true
+theme:
+  light: flatly
+  dark: darkly
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(tidyverse)
+bp <- read_csv(here::here("data/bonita_peak.csv"))
+categories <- read_csv(here::here("data/site_categories.csv"))
+```
+
+```{r}
+
+bp |>
+  left_join(categories) |>
+  distinct(site_id, taxon, site_cat2) |>
+  group_by(site_id, site_cat2) |>
+  summarise(total_rich = n()) |>
+ggplot(
+       aes(x = site_id,
+           y = total_rich,
+           fill = site_cat2)) +
+  geom_col() +
+  labs(title = "Total Richness",
+y = "Richness")
+```
+
+## Overview
+
+You will calculate some simple metrics for (nearly) the complete Bonita Peak data set. The calculations will largely follow the first tutorial from class. The second tutorial will show some examples for calculating these metrics across the full data set. In addition to your calculations, you will develop a multi-metric index and apply it to some "test" sites with unknown environmental condition. Finally, you will interpret the condition in these unknown sites in your write up.
+
+## Set up
+
+-   Load the `tidyverse` library
+
+-   Read in the data
+
+```{r}
+#| eval: false
+# library
+library(tidyverse)
+
+# data
+bp <- read_csv("data/bonita_peak.csv")
+categories <- read_csv("data/site_categories.csv")
+```
+
+## Modify data to add categories and remove `test` sites
+
+-   Join the `bp` and the `categories` data together
+
+```{r}
+full_dat <- bp |>
+  full_join(categories)
+full_dat
+```
+
+-   Make two objects
+
+    -   One which does not have data from the `test` sites
+
+    -   One that only has the `test` sites
+
+```{r}
+fit_dat <-  full_dat |>
+  filter(site_category != "test")
+fit_dat
+test_dat <- full_dat |>
+  filter(site_category == "test")
+test_dat
+```
+
+# Calculations
+
+-   Complete the following calculations.
+
+-   You should save your results for each problem in a new data object.
+
+    -   i.e., store the results of problem 1 in an object called `total_rich`, the results for problem 2 as `EPT_rich`, etc.
+
+-   Based on your results, you will pick 5 metrics which most closely align with the site category designations
+
+-   You will determine index values based on the numbers in your results.
+
+    -   score of 1 = mean `reference` value
+
+    -   score of 3 = mean `light` value
+
+    -   Score of 5 = mean `heavy` value
+
+-   Then, you will calculate an average index value for each category
+
+-   Finally, you will calculate an average index value for your `test` sites and interpret their overall condition.
+
+-   When the question asks for you to make a plot, ensure the following
+
+    -   The plot has an appropriate title
+
+    -   The plot has a descriptive name on the y-axis
+
+    -   Your saved plots are a reasonable size
+
+        -   After you export the plot, look at it and paste it into your submission document
+
+        -   You may need to re-save the plot with different `height` and `width` values.
+
+## Richness
+
+1.  Calculate the total richness in your two sites. Make sure to save it as a data object. In addition, make a bar graph of this result and save it as a .png file to your `plots/` folder.
+
+```{r}
+#| message: false
+#| warning: false
+total_rich <- fit_dat |>
+  distinct(site_id, taxon, site_cat2) |>
+  group_by(site_id, site_cat2) |>
+  summarise(total_rich = n())
+# total_rich
+# ggplot(total_rich,
+#        aes(x = site_id, 
+#            y = total_rich,
+#            fill = site_category)) +
+#   geom_col() +
+#   labs(title = "Total Richness",
+       # y = "Richness")
+
+
+ggplot(total_rich,
+       aes(y = total_rich,
+           fill = site_cat2)) +
+  geom_boxplot() +
+  labs(title = "Total Richness",
+       y = "Richness")
+
+total_rich |>
+  group_by(site_cat2) |>
+  summarize(mean(total_rich),sd(total_rich))
+
+# ref = 26.2 
+# light = 20.7 
+# heavy = 10
+```
+
+2.  Calculate the EPT richness in your two sites and save it as a data object.
+
+```{r}
+#| message: false
+#| warning: false
+ept_rich <- fit_dat |>
+  filter(order == "Ephemeroptera" |
+           order == "Plecoptera" |
+           order == "Trichoptera") |>
+  distinct(site_category, stream, taxon) |>
+  group_by(site_category, stream) |>
+  summarise(EPT_rich = n()) |>
+  ungroup()
+
+ept_rich |>
+  group_by(site_category) |>
+  summarize(mean(EPT_rich))
+# 15.8, 12.4, 5.17
+  
+```
+
+3.  Calculate the Richness of the Trichoptera order and save it as an object.
+
+```{r}
+#| message: false
+#| warning: false
+T_rich <- fit_dat |>
+  filter(order == "Trichoptera") |>
+  distinct(site_category, stream, taxon) |>
+  group_by(site_category, stream) |>
+  summarise(T_rich = n())
+
+T_rich |>
+  group_by(site_category) |>
+  summarize(mean(T_rich))
+# 4.8, 3.4, 2.4
+
+fit_dat |>
+  filter(order == "Plecoptera") |>
+  distinct(site_category, stream, taxon) |>
+  group_by(site_category, stream) |>
+  summarise(T_rich = n())|>
+  group_by(site_category) |>
+  summarize(mean(T_rich))
+# 6.5, 5, 3
+
+fit_dat |>
+  filter(order == "Ephemeroptera") |>
+  distinct(site_category, stream, taxon) |>
+  group_by(site_category, stream) |>
+  summarise(T_rich = n())|>
+  group_by(site_category) |>
+  summarize(mean(T_rich))
+#, 4.5, 4, 1 
+
+```
+
+4.  Calculate the richness of the Rhyacophilidae family in your two sites. In addition, make a bar graph of this result and save it as a .png file to your `plots/` folder.
+
+```{r}
+#| message: false
+#| warning: false
+rhya_rich <- fit_dat |>
+  filter(family == "Rhyacophilidae") |>
+  distinct(site_category, stream, taxon) |>
+  group_by(site_category, stream) |>
+  summarise(rhya_rich = n())
+
+rhya_rich |>
+  group_by(site_category) |>
+  summarize(mean(rhya_rich))
+
+# 2.67, 1.6, 1.5
+```
+
+5.  Calculate the per cent of EPT individuals for your two sites and save it as a data object. In addition, make a bar graph of this result and save it as a .png file to your `plots/` folder.
+
+```{r}
+#| message: false
+#| warning: false
+ept_per_n <- fit_dat |>
+  filter(order == "Ephemeroptera" |
+           order == "Plecoptera" |
+           order == "Trichoptera") |>
+  group_by(site_category, stream, total_count) |>
+  summarize(ept_n = sum(count)) |>
+  mutate(ept_percent_ind = ept_n / total_count)
+
+ept_per_n |>
+  group_by(site_category) |>
+  summarize(mean(ept_percent_ind))
+
+# 0.811, 0.837, 0.539
+```
+
+6.  Calculate the per cent of individuals which are in the Chironomidae family in your two sites and save it as an object.
+
+```{r}
+chiro_per_n <- fit_dat |>
+  filter(family == "Chironomidae") |>
+  group_by(stream, site_category, total_count) |>
+  summarize(chiro_n = sum(count)) |>
+  mutate(chiro_percent_ind = chiro_n / total_count)
+
+chiro_per_n |>
+  group_by(site_category) |>
+  summarize(mean(chiro_percent_ind))
+
+```
+
+6.  Calculate Shannon's Diversity Index and save it as a data object. In addition, make a bar graph of this result and save it as a .png file to your `plots/` folder.
+
+```{r}
+shannon <- fit_dat |> 
+  select(stream, site_category, taxon, count, total_count) |>
+  mutate(pi = count / total_count,
+         ln_pi = log(pi),
+         pi_ln_pi = pi*ln_pi) |>
+  group_by(stream, site_category) |>
+  summarize(H = -sum(pi_ln_pi))
+shannon
+
+ggplot(shannon,
+       aes(x = stream, 
+           y = H)) +
+  geom_col() +
+  labs(title = "Shannon's Diversity Index",
+       y = "H`")
+
+ggplot(shannon,
+       aes(x = site_category, 
+           y = H)) +
+  geom_boxplot() +
+  labs(title = "Shannon's Diversity Index",
+       y = "H`")
+
+shannon |>
+  group_by(site_category) |>
+  summarize(mean(H))
+
+# 2.26, 2.22, 1.81
+```
+
+7.  Calculate the richness of the predator functional feeding group in your two sites and save it as an object.
+
+```{r}
+pred_rich <- fit_dat |>
+    filter(FFG == "predator") |>
+    distinct(stream, taxon, site_category) |>
+    group_by(stream, site_category) |>
+    summarise(pred_rich = n())
+pred_rich|>
+  group_by(site_category) |>
+  summarize(mean(pred_rich))
+
+# 7.67, 5.6, 3.33
+
+fit_dat |>
+    filter(FFG == "scraper") |>
+    distinct(stream, taxon, site_category) |>
+    group_by(stream, site_category) |>
+    summarise(pred_rich = n()) |>
+  group_by(site_category) |>
+  summarize(mean(pred_rich))
+# 4, 3.2, 1
+
+```
+
+# Writeup
+
+-   Complete the following steps in a new document such as Microsoft Word or Google Docs.
+-   Be sure to interpret your results as indicated in the questions for full credit.
+-   You may need to return to your R script and add new functions/commands to answer some of these questions.
+
+## Document setup
+
+-   Include your name and "ENVS337 Data Module 1" at the top of your document
+
+-   Add a numbered list to your document which match the question numbers here with your answers immediately after it.
+
+## Questions
+
+1.  What is the total abundance in your two sites? In general, what does the difference in these two values imply about the two sites?
+
+    ::: callout-tip
+    -   look at the value in the `total_count` column for your two sites
+    :::
+
+```{r}
+# 11,952 vs 47
+# one stream is much more productive than the other
+# Higher abundance = more biomass = more life
+```
+
+2.  What is the total richness at each of your sites? Write out the value, include your bar plot, and fully interpret this result.
+
+```{r}
+# see bar plot above
+# 28 vs 14
+# MAggie has twice as many taxa than Mineral. In general, this is considered good: more taxa, more niches, more ecological function/ecosystem services
+```
+
+3.  What is the EPT richness of your two sites? Write out the value and fully interpret this result.
+
+```{r}
+# 15 vs. 6
+# similar as above, Maggie has nearly three times as many EPT taxa. EPT are generally more sensitive, so this further supports that maggie is in better condition. 
+# We also could look at which EPT taxa are there to see if those in mineral are tolerant
+```
+
+4.  What is the Trichoptera richness of your two sites? Write out the value and fully interpret this result.
+
+```{r}
+# 5 vs 3
+# There are nearly twice as many in maggie, but the difference between 3 and 5 is not as dramatic. 
+# Trichoptera also have variable sensitivities based on families, so just looking at T richness may not be super informative
+```
+
+5.  What is the Rhyacophilidae richness of your two sites? Write out the value and fully interpret this result. In addition, discuss why I asked you to calculate the Trichoptera and Rhyacophilidae richness separately. Recall our discussion of the Clements et al. 2000 paper.
+
+```{r}
+# 3 vs 2
+# Rhyacophilidae were shown to be more sensitive in Clements et al. 
+# we're looking at them here since some T are tolerant
+# 3 vs 2 is not much different. This offers equivocal support
+```
+
+6.  What is the % EPT individuals of your two sites? Write out the value, include the bar plot, and fully interpret this result.
+
+```{r}
+# 84 vs 30 %
+# much higher proportion of individuals are EPT meaning that many individuals are in the groups which are generally considered sensitive. 
+```
+
+7.  What is the % Chironomidae individuals of your two sites? Write out the value and fully interpret this result. Recall that Chironomidae are generally considered to be a tolerant family of Diptera.
+
+```{r}
+# 2 vs 62%
+# chiros are tolerant, and more than half the individuals in mineral creek are chironomidae. This gives strong support for the idea that Mineral is in worse condition
+```
+
+8.  What is Shannon's Diversity Index ($H^\prime$) of your two sites? Write out the value, include the bar plot, and fully interpret this result.
+
+```{r}
+# 1.9 vs. 2
+# these values are not much different. And actually Mineral has a higher score meaning it's more evenly distributed
+# In other words, more of the species in maggie have low relative abundances whereas the relative proportions in Mineral are more similar. 
+```
+
+9.  What is the richness of the predator FFG in your two sites? Write out the value and fully interpret this result.
+
+```{r}
+# 10 vs 5
+# similar to other richness metrics. There are twice as many predator taxa. Predators tend to decline with increasing metal contamination
+```
+
+10. Of the metrics you calculated, how many of them support the idea that Maggie Gulch is in a better condition than the main fork of Mineral Creek? Did any metrics offer counter evidence (i.e., that Mineral is in similar or better condition than Maggie Gulch)?
+
+```{r}
+# 5 of 7 support maggie being in better condition
+# 6 of 8 if we include total abundance
+# the Tricho, Rhyacphila, and Shannon metrics all gave equivocal evidence
+```
+
+11. Do you consider any specific metrics to be more or less important and.or informative than others? Why or why not?
+
+```{r}
+# judge answers based on merit and justification
+# i.e., predators more important because they integrate things happening throughout the food web
+# total richness bc of more ecological niches, etc. 
+# % chiro bc they are tolerant, have limited ecological niches, etc. 
+```
+
+12. Overall, what is your interpretation of the condition of these two streams? Be sure to fully justify and explain your interpretation for full credit.
+
+```{r}
+# as above, make sure answers are justified by data. OK if use equivocal results to temper interpretations. 
+```
