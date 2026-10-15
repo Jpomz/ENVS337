@@ -22,11 +22,11 @@ theme:
 
 library(tidyverse)
 bp <- read_csv(here::here("data/bonita_peak.csv"))
-categories <- read_csv(here::here("data/site_categories.csv"))
+categories <- read_csv(here::here("data/site_categories_training.csv"))
 ```
 
 ```{r}
-
+#| eval: false
 bp |>
   left_join(categories) |>
   distinct(site_id, taxon, site_cat2) |>
@@ -39,6 +39,168 @@ ggplot(
   geom_col() +
   labs(title = "Total Richness",
 y = "Richness")
+```
+
+# testing claude function
+
+```{r}
+#| message: false
+bp_traits <- bp |>
+  left_join(categories)
+
+calc_metrics <- function(counts) {
+  counts |>
+    summarise(
+      impact = unique(site_category),
+      richness     = n_distinct(taxon),
+      ept_richness = n_distinct(taxon[order %in% c('Ephemeroptera','Plecoptera', 'Trichoptera')]),
+      e_rich = n_distinct(taxon[order %in% c('Ephemeroptera')]),
+      t_rich =  n_distinct(taxon[order %in% c('Trichoptera')]),
+      p_rich =  n_distinct(taxon[order %in% c('Plecoptera')]),
+      hept_rich =  n_distinct(taxon[family %in% c('Heptageniidae')]),
+      rhya_rich =  n_distinct(taxon[family %in% c('Rhyacophilidae')]),
+      pred_rich =  n_distinct(taxon[FFG %in% c('predator')]),
+      scraper_rich = n_distinct(taxon[FFG %in% c('scraper')]),
+      shannon      = vegan::diversity(count, index = 'shannon'),
+      pct_chiro    = 100 * 
+        sum(count[family %in% 'Chironomidae']) / sum(count),
+      pct_ept    = 100 * 
+        sum(count[order %in% c('Ephemeroptera',
+                         'Plecoptera',
+                         'Trichoptera')]) / sum(count),
+      .by = site_id
+    )
+}
+
+metric_df <- calc_metrics(bp_traits)
+metric_df
+```
+
+## Plots 
+
+```{r}
+metric_df |>
+  pivot_longer(richness:pct_ept, names_to = 'metric', values_to = 'value') |>
+  ggplot(aes(x = impact,
+             y = value,
+             fill = impact)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.1, alpha = 0.7) +
+  facet_wrap(~metric, scales = 'free_y') +
+  labs(x = 'Impact category', y = 'Metric value') +
+  theme_bw()
+```
+
+## Means
+
+```{r}
+#| message: false
+metric_df |>
+  pivot_longer(richness:pct_ept, names_to = 'metric', values_to = 'value') |>
+  group_by(impact, metric)|>
+  summarise(mean(value)) |>
+  arrange(metric)
+```
+
+## Scoring
+
+Set values for:
+
+-    upper (at or above = "GOOD")
+
+-   lower (at or above = "Light")
+
+-   below the lower threshold = "HEAVY"
+
+```{r}
+scoring <- tribble(
+  ~metric,        ~direction, ~lower, ~upper,
+  'ept_richness', 'decrease',  10,     15, 
+  'p_rich',      'decrease',   5,    6, 
+  'pred_rich',    'decrease',  5,    6, 
+  'richness', 'decrease',      20, 25,   
+)
+
+score_sites <- function(metrics, scoring) {
+  metrics |>
+    pivot_longer(c(ept_richness, p_rich,pred_rich,richness), 
+                 names_to = 'metric', values_to = 'value') |>
+    inner_join(scoring, by = 'metric') |>
+    mutate(score = case_when(
+      direction == 'decrease' & value >= upper ~ 5,
+      direction == 'decrease' & value >= lower ~ 3,
+      direction == 'decrease'                  ~ 1,
+      direction == 'increase' & value <= lower ~ 5,
+      direction == 'increase' & value <= upper ~ 3,
+      TRUE                                     ~ 1
+    )) |>
+    summarise(index = sum(score), .by = site_id)
+}
+
+```
+
+```{r}
+score_sites(metric_df, scoring) |>
+  left_join(categories) |>
+  arrange(index, site_category)
+```
+
+## Classify
+
+```{r}
+ref_min   <- 16   # index at or above this is predicted 'reference'
+light_min <- 10   
+classify_index <- function(index) {
+  case_when(
+    index >= ref_min   ~ 'reference',
+    index >= light_min ~ 'light',
+    TRUE               ~ 'heavy'
+  )
+}
+```
+
+```{r}
+index_train <- score_sites(metric_df, scoring) |>
+  left_join(categories, by = 'site_id') |>
+  mutate(#category  = factor(category, levels = c('reference', 'light', 'heavy')),
+         predicted = classify_index(index))
+index_train |>
+  arrange(index, site_category)
+```
+
+```{r}
+ggplot(index_train, aes(x = site_category, y = index)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.1, alpha = 0.7) +
+  labs(x = 'Known impact category', y = 'Index score') +
+  theme_bw()
+
+# How often does the predicted category match the known category?
+table(known = index_train$site_category, predicted = index_train$predicted)
+```
+
+```{r}
+test_cat <- read_csv(here::here("data/site_categories_test.csv"))
+
+index_train |>
+  filter(site_category == "test") |>
+  left_join(test_cat)
+```
+
+```{r}
+metric_df |>
+  filter(impact == "test") |>
+  pivot_longer(c(ept_richness, p_rich, pred_rich, richness), 
+               names_to = "metric", 
+               values_to = "value") |>
+  ggplot(aes(x = site_id,
+             y = value,
+             fill = impact)) +
+  geom_col() +
+  #geom_jitter(width = 0.1, alpha = 0.7) +
+  facet_wrap(~metric, scales = 'free_y') +
+  labs(x = 'Impact category', y = 'Metric value') +
+  theme_bw()
 ```
 
 ## Overview
