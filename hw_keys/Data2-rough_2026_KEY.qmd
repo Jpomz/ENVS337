@@ -76,7 +76,7 @@ metric_df <- calc_metrics(bp_traits)
 metric_df
 ```
 
-## Plots 
+## Plots
 
 ```{r}
 metric_df |>
@@ -102,15 +102,39 @@ metric_df |>
   arrange(metric)
 ```
 
+## Just one metric at a time
+
+```{r}
+metric_df |>
+  group_by(impact) |>
+  summarize(mean(pred_rich),
+            sd(pred_rich))
+
+metric_df |>
+  group_by(impact) |>
+  summarize(mean(ept_richness),
+            sd(ept_richness))
+
+
+```
+
 ## Scoring
 
 Set values for:
 
--    upper (at or above = "GOOD")
+-   upper (at or above = "GOOD")
 
 -   lower (at or above = "Light")
 
 -   below the lower threshold = "HEAVY"
+
+### How to determine scores?
+
+-   mean value at a category?
+
+-   Half the distance between two categories?
+
+-   Other?
 
 ```{r}
 scoring <- tribble(
