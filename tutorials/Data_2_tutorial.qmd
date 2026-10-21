@@ -1,9 +1,14 @@
 ---
 title: "Data Module 2: Bioassessment Index"
-format: html
+format: 
+  html:
+    theme: 
+      light: flatly
+      dark: slate
 editor: visual
 toc: true
 toc-depth: 2
+toc-expand: true
 embed-resources: true
 ---
 
@@ -23,6 +28,10 @@ categories <- read_csv(here::here("data/site_categories_training.csv")) |>
                "test")))
 test_cat <- read_csv(here::here("data/site_categories_test.csv"))
 ```
+
+# Tutorial + Assignment
+
+-   The full tutorial and assignment description are in this single document.
 
 # Overview
 
@@ -81,19 +90,18 @@ test_cat <- read_csv(here::here("data/site_categories_test.csv"))
 -   The sites are located across a gradient of metal contamination
 
     -   Impacted sites have different suites of metals present and in different combinations
-    
+
     -   Sites are broadly categorized into 'reference', 'light' or 'heavy' impact based on total metal concentrations
-    
+
     -   Reference sites typically have no metals in them
-    
+
     -   There are no other known impacts to these sites
-    
+
     -   Therefore, differences between categories can be mostly attributed to differences in metal concentrations
 
 -   The sample collection and data processing steps were identical for all sites in this data set
 
     -   Hence, the results for each site are directly comparable with each other
-    
 
 # Setup
 
@@ -408,7 +416,7 @@ test_score |>
 6.  Pick a metric score you expected to be high at a reference site but was actually low (or vice versa: a metric you expected to be low at a heavy impact site, but was actually high). Which metric was it? List at least two possible explanations for it that have nothing to do with pollution (e.g., habitat, substrate, flow, season, elevation, dispersal, sampling).
 7.  The absence of a taxon from a sample does not prove it is absent from the stream. What does this mean for metrics like richness and EPT richness? Does this help explain any of the "surprises" you found in your index classifications?
 8.  The site categories (reference, light, heavy) are a simplification and based on "overall metal contamination". However, metals can interact with another and be additive (sum of the two effects), synergistic (greater than the sum of the two effects), or antagonistic (less than the sum of the two effects). How can this complicate using a single index to classify sites?
-9.  A \"light impact\" site is more similar to a gradient than a discrete category. Where would you expect an index to perform best (reference vs. heavy) and worst (reference vs. light, or light vs. heavy)? Does your classification table support that?
-10. Suppose a site was classified as \"reference\" by the index but a land manager says there is a known upstream impact. Whom do you believe, and what additional data would you collect to resolve the disagreement?
+9.  A "light impact" site is more similar to a gradient than a discrete category. Where would you expect an index to perform best (reference vs. heavy) and worst (reference vs. light, or light vs. heavy)? Does your classification table support that?
+10. Suppose a site was classified as "reference" by the index but a land manager says there is a known upstream impact. Whom do you believe, and what additional data would you collect to resolve the disagreement?
 11. Reflect on the challenges posed by creating a biotic index to classify stream condition. What are the pros and cons of using an index versus multiple single metrics?
 12. A watershed group asks you to analyze data from a new test site they think is contaminated with heavy metals in this same area of Colorado. How would you analyze it? Would you use the index you developed here, or would you use individual scores from one or more metrics? Explain which you would do, and if you choose individual metrics, name which ones specifically and explain why you would use those.
