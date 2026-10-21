@@ -1,0 +1,414 @@
+---
+title: "Data Module 2: Bioassessment Index"
+format: html
+editor: visual
+toc: true
+toc-depth: 2
+embed-resources: true
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+source(here::here("tutorials/Data_2_custom_functions.R"))
+library(tidyverse)
+bp <- read_csv(here::here("data/bonita_peak.csv"))
+categories <- read_csv(here::here("data/site_categories_training.csv")) |>
+  mutate(site_category = factor(
+    site_category,
+    levels = c("reference",
+               "light",
+               "heavy",
+               "test")))
+test_cat <- read_csv(here::here("data/site_categories_test.csv"))
+```
+
+# Overview
+
+-   Previously, you calculated individual metrics for two sites and were asked to assess which site was impacted.
+
+-   In this module, you will be calculating a suite of metrics and then calculating an overall index score to classify sites.
+
+    -   An index is necessary to put all the metrics on the same scale
+
+-   Here, we will use a training data set of sites with known impact categories.
+
+-   We will pick the individual metrics which best separate the known impact categories and use these to calculate an overall index
+
+-   Then, you will apply this index to 5 "test" sites and classify their status.
+
+-   Next, the known categories will be revealed.
+
+-   You will be asked to interpret the index and discuss where it did or did not work correctly.
+
+# Background
+
+-   Many bioassessment programs use an index to classify sites
+
+-   This has benefits as being a simplified number which is easy for agencies, land managers, and other interested parties to communicate with each other
+
+-   There are many ways of calculating indices.
+
+-   Here, we will calculate individual metrics, and then standardize them by giving them relative values on the same scale
+
+    -   Standardization is necessary because each metric is on a different scale
+
+    -   For example, it's hard to compare a richness value of 32 with a percent Chironomidae value of 15%
+
+-   Sites will be classified based on thresholds or cutoffs in their score values
+
+    -   For example, say we determine that a species richness of 10+ is indicative of a reference site, and a richness of less than 5 is a heavily impacted site.
+
+    -   We may decide that the cutoff values are 5 and 10
+
+    -   All sites which have richness value $\ge$ 10 get a score of 5
+
+    -   All sites which have richness values $<$ 5 and get a score of 1
+
+    -   Sites with richness values $\ge$ 5 and $<$ 10 will get a score of 3
+
+-   The final index value will be the sum of all metric scores.
+
+-   Sites will be classified based on their total score.
+
+# Data
+
+-   We will be using the same macroinvertebrate data as before
+
+-   The data comes from 25 25 sites across the Bonita Peak Mining District near Silverton, CO
+
+-   The sites are located across a gradient of metal contamination
+
+    -   Impacted sites have different suites of metals present and in different combinations
+    
+    -   Sites are broadly categorized into 'reference', 'light' or 'heavy' impact based on total metal concentrations
+    
+    -   Reference sites typically have no metals in them
+    
+    -   There are no other known impacts to these sites
+    
+    -   Therefore, differences between categories can be mostly attributed to differences in metal concentrations
+
+-   The sample collection and data processing steps were identical for all sites in this data set
+
+    -   Hence, the results for each site are directly comparable with each other
+    
+
+# Setup
+
+## Download files from D2L
+
+-   You should already have the `bonita_peak.csv` downloaded in your `data/` folder from the first module, but download it again if needed.
+
+-   You will also need to download the `site_categories_training.csv` and put it in your `data/` folder
+
+-   Finally, you will need to download the `Data_2_cusom_functions.R` script
+
+    -   Put this in your R project, not in the `data/` folder
+
+## Load Libraries and data
+
+-   the `source()` command below runs the full script which contains custom functions for this module (more below)
+
+-   We will load the `bp` data as in the last module
+
+-   We will also load the new object which contains the site categories
+
+```{r}
+#| eval: false
+#| 
+source("Data_2_custom_functions.R")
+library(tidyverse)
+bp <- read_csv("data/bonita_peak.csv")
+categories <- read_csv("data/site_categories_training.csv")
+
+# set levels
+categories <- categories |>
+  mutate(site_category = factor(
+    site_category,
+    levels = c("reference",
+               "light",
+               "heavy",
+               "test")))
+
+```
+
+## Join `bp` data with `categories`
+
+-   The `categories` object has the impact category for each site
+
+    -   20 of the sites have known categories
+
+    -   5 of the sites are unknown and have the category of "test"
+
+-   We will join these two objects together before continuing.
+
+```{r}
+bp_cat <- bp |>
+  left_join(categories) 
+bp_cat
+dim(bp_cat)
+# full dat = 486 rows
+```
+
+## Split data into training and test objects
+
+-   We will split this data into a "training" set to develop our index and a "test" set to see how well our index works
+
+```{r}
+test <- bp_cat |>
+  filter(site_category == "test")
+test
+dim(test)
+train <- bp_cat |>
+  filter(site_category != "test")
+train
+dim(train)
+
+# 111 + 375 = 486 (full dat)
+```
+
+# Develop Index with `train` data
+
+-   The script that you downloaded and loaded above contains custom functions
+
+-   The first we will use is called `calc_metrics()`
+
+-   This function takes a data frame and calculates individual biomonitoring metrics for each site
+
+-   This is similar to what you did in module 1, but the function calculates all of them at once
+
+-   The candidate metrics are as follows:
+
+    -   `tot_rich` = Total taxonomic richness
+    -   `ept_rich` = EPT taxonomic richness
+    -   `e_rich` = Ephemeroptera taxonomic richness
+    -   `p_rich` = Plecoptera taxonomic richness
+    -   `t_rich` = Trichoptera taxonomic richness
+    -   `hept_rich` = Ephemeroptera::Heptageniidae taxonomic richness
+    -   `rhya_rich` = Trichoptera::Rhyacophilidae taxonomic richness
+    -   `pred_rich` = FFG::Predator Richness
+    -   `scraper_rich` = FFG::Scraper Richness
+    -   `shannon` = Shannon Diversity Index
+    -   `pct_chiro` = Percent Diptera::Chironomidae individuals
+    -   `pct_ept` = Percent EPT Individuals
+
+-   In the next step, we will calculate all metrics together and plot the results
+
+-   You will then be tasked with choosing which metrics to use to for our index
+
+## Calculate all metrics
+
+```{r}
+metric_df <- calc_metrics(train)
+metric_df
+```
+
+## Plot all metrics
+
+```{r}
+plot_metrics(metric_df)
+```
+
+## Choose metrics
+
+### Discuss the following at your table
+
+1.  Which metrics show clear separation among the three categories?
+    1.  You may want to calculate means for individual metrics (see below)
+2.  Which metrics overlap a lot?
+3.  Which metrics go *down* with impact, and which go *up*?
+4.  Are any metrics doing something unexpected? What might explain it?
+5.  Choose 4 metrics to use to calculate an index. Do they increase or decrease with more impact?
+
+### Means for individual metrics
+
+-   Let's look at the means for `pct_chiro` to see if they are different enough to separate the categories
+
+```{r}
+metric_df |>
+  group_by(impact) |>
+  summarize(mean(pct_chiro))
+```
+
+-   For other metrics, change `pct_chiro` to the name of the metric you want to explore
+
+## Scoring sites
+
+-   Choose 4 metrics for your index
+
+-   Make sure the names match exactly
+
+    -   run `names(metric_df)` if you need a refresher
+
+```{r}
+metrics <- c("tot_rich", "ept_rich", "p_rich", "pred_rich")
+```
+
+### Define cutoff values
+
+-   See where the mean metric value for reference, light, and heavy categories are
+
+```{r}
+#| message: false
+metric_df |>
+  pivot_longer(all_of(metrics)) |>
+  group_by(name, impact)|>
+  summarize(mean(value))
+```
+
+### Discuss the following at your table
+
+1.  Which values should you use to define the cutoff between each category?
+    1.  The mean value at that category?
+        1.  for `ept_rich` this would be 14.6 and 4.7
+    2.  Half the difference between the categories?
+        1.  for `ept_rich` this would be \~13 and 8.1
+2.  Complete the following table with your metric names and your value cutoffs
+
+```{r}
+scoring <- tribble(
+  ~metric,        ~direction,  ~lower, ~upper,
+  'ept_rich',     'decrease',  10,     15, 
+  'p_rich',       'decrease',  5,      6, 
+  'pred_rich',    'decrease',  5,      6, 
+  'rich',         'decrease',  20,     25,   
+)
+```
+
+## Estimate the site-level index
+
+-   run the custom function `score_sites()`
+
+-   This function requires the `metric_df`, the `metrics`, and the `scoring` objects
+
+```{r}
+index_values <- score_sites(metric_df, metrics, scoring)
+index_values
+```
+
+-   Add back in the known categories
+
+```{r}
+index_values <- score_sites(metric_df, metrics, scoring)|>
+  left_join(categories)
+index_values |>
+  arrange(index)
+```
+
+-   Calculate the average index value across the site categories
+
+-   Plot index values and site categories
+
+```{r}
+index_values |>
+  group_by(site_category) |>
+  summarize(mean(index))
+
+index_values |>
+  ggplot(aes(x = site_category,
+             y = index,
+             fill = site_category)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.1, alpha = 0.7) +
+  labs(x = 'Known impact category', y = 'Index score')
+```
+
+## Classify the sites
+
+-   We will now define what index values are classified as reference, light, or heavy impacts
+
+```{r}
+ref_min   <- 12   # index at or above this is predicted 'reference'
+light_min <- 5   # index below this is 'heavy' index between the two is 'light'
+
+```
+
+-   Now use the `classify_index()` custom function to predict what the site category is
+
+```{r}
+index_categories <- index_values |>
+  mutate(predicted = classify_index(index))
+```
+
+-   View and plot the predicted categories based on the known categories
+
+```{r}
+index_categories |> 
+  arrange(index, site_category)
+
+ggplot(index_categories, aes(x = site_category, y = index)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.1, alpha = 0.7) +
+  labs(x = 'Known impact category', y = 'Index score') +
+  theme_bw()
+
+# How often does the predicted category match the known category?
+table(known = index_categories$site_category,
+      predicted = index_categories$predicted)
+```
+
+## Discuss the following at your table
+
+1.  How many sites did the index classify correctly? Which sites did it get wrong?
+
+2.  For a missclassified site, look at its individual metric scores. Which metric pulled it in the wrong direction?
+
+3.  This index was built *and* tested on the same sites. Why might it perform worse on new sites?
+
+# Homework: Classify the "test" sites
+
+1.  Calculate all metrics for the `test` object
+    1.  use the `calc_metrics()` function
+2.  Score sites using the metric and index values your table developed
+    1.  use the `score_sites()` function
+3.  Classify the sites
+    1.  use the `classify_index()` function inside of a `mutate()` function as above
+4.  Compare your classification with known categories (revealed below)
+5.  Complete write up assignment below
+6.  Submit the following documents on D2L
+    1.  Your R script with all your calculations
+    2.  Your write up as a .pdf or word document
+
+```{r}
+test_metrics <- calc_metrics(test)
+test_metrics |>
+  select(site_id, all_of(metrics))
+test_score <- score_sites(test_metrics, metrics, scoring)
+test_score |>
+  mutate(predicted = classify_index(index))
+```
+
+## Test site categories
+
+-   The following table shows the known categories of your test site
+
+::: {#my-table-container style="max-width: 50%; margin: auto;"}
+| Site ID | Known Category |
+|:-------:|:--------------:|
+|  MaMIL  |     heavy      |
+| NFAaBU  |     light      |
+|  MAGaA  |   reference    |
+|  MFMaM  |     heavy      |
+| BUaNFA  |     heavy      |
+
+: Test sites with known impact category. {#tbl-sales .table-striped .table-hover .table-sm }
+:::
+
+## Write up
+
+-   Complete the following in a word document and submit on D2L
+
+1.  List out the metrics you selected, and the high and low cutoff for each e.g., your `scoring` table. Briefly describe what each metric is telling us about a site (regardless of how well your index performed).
+2.  Make a table which has the Site ID, your predicted classification, and the known site category. Below that, summarize how well the index predicted site classifications. How many did it predict correctly? Were certain categories predicted more or less accurately? Based on the number of test sites (and number per category), how confident are you in this interpretation.
+3.  For any site the index got wrong, which metric or metrics misled it, and why might that have happened? (You may need to view the individual metric calculations for your test sites).
+4.  List at least two limitations of an index built from this set of sites (think about how many sites were used, how the categories were assigned, how the cutoffs were chosen, etc.).
+5.  If you could change one thing about the index (a metric, a cutoff, or the data used to build it), what would it be and why?
+6.  Pick a metric score you expected to be high at a reference site but was actually low (or vice versa: a metric you expected to be low at a heavy impact site, but was actually high). Which metric was it? List at least two possible explanations for it that have nothing to do with pollution (e.g., habitat, substrate, flow, season, elevation, dispersal, sampling).
+7.  The absence of a taxon from a sample does not prove it is absent from the stream. What does this mean for metrics like richness and EPT richness? Does this help explain any of the "surprises" you found in your index classifications?
+8.  The site categories (reference, light, heavy) are a simplification and based on "overall metal contamination". However, metals can interact with another and be additive (sum of the two effects), synergistic (greater than the sum of the two effects), or antagonistic (less than the sum of the two effects). How can this complicate using a single index to classify sites?
+9.  A \"light impact\" site is more similar to a gradient than a discrete category. Where would you expect an index to perform best (reference vs. heavy) and worst (reference vs. light, or light vs. heavy)? Does your classification table support that?
+10. Suppose a site was classified as \"reference\" by the index but a land manager says there is a known upstream impact. Whom do you believe, and what additional data would you collect to resolve the disagreement?
+11. Reflect on the challenges posed by creating a biotic index to classify stream condition. What are the pros and cons of using an index versus multiple single metrics?
+12. A watershed group asks you to analyze data from a new test site they think is contaminated with heavy metals in this same area of Colorado. How would you analyze it? Would you use the index you developed here, or would you use individual scores from one or more metrics? Explain which you would do, and if you choose individual metrics, name which ones specifically and explain why you would use those.
