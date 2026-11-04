@@ -142,7 +142,7 @@ scoring <- tribble(
   'ept_richness', 'decrease',  10,     15, 
   'p_rich',      'decrease',   5,    6, 
   'pred_rich',    'decrease',  5,    6, 
-  'richness', 'decrease',      20, 25,   
+  'richness',   'decrease',      20, 25,   
 )
 
 score_sites <- function(metrics, scoring) {
