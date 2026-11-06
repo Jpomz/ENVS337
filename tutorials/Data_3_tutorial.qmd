@@ -47,73 +47,51 @@ purp <- other_sites |>
 
 # Overview
 
--   Previously, you calculated individual metrics for two sites and were asked to assess which site was impacted.
+This data module is made up of three parts
 
--   In this module, you will be calculating a suite of metrics and then calculating an overall index score to classify sites.
-
-    -   An index is necessary to put all the metrics on the same scale
-
--   Here, we will use a training data set of sites with known impact categories.
-
--   We will pick the individual metrics which best separate the known impact categories and use these to calculate an overall index
-
--   Then, you will apply this index to 5 "test" sites and classify their status.
-
--   Next, the known categories will be revealed.
-
--   You will be asked to interpret the index and discuss where it did or did not work correctly.
+1.  Entering data from the Animas River spill into a shared Google Sheets file
+2.  Example of Colorado's MMI on the Bonita Peak data
+3.  Calculating simple metrics and Colorado's MMI Score on the Animas River data
 
 # Background
 
--   Many bioassessment programs use an index to classify sites
+# Part 1 Data Entry 
 
--   This has benefits as being a simplified number which is easy for agencies, land managers, and other interested parties to communicate with each other
+-   Each student is assigned one site-date combination to enter into a shared Google Sheets file
 
--   There are many ways of calculating indices.
+    -   See D2L for your assignment, all the data, and the Google link which is current to this semester's course
 
--   Here, we will calculate individual metrics, and then standardize them by giving them relative values on the same scale
+-   I will demonstrate how to enter the data in class, but keep the following in mind
 
-    -   Standardization is necessary because each metric is on a different scale
+    1.  Open the Google Sheets link
 
-    -   For example, it's hard to compare a richness value of 32 with a percent Chironomidae value of 15%
+    2.  Copy the information from the `Template` tab
 
--   Sites will be classified based on thresholds or cutoffs in their score values
+    3.  Create a new tab and name it with the site code and your name
 
-    -   For example, say we determine that a species richness of 10+ is indicative of a reference site, and a richness of less than 5 is a heavily impacted site.
+        -   e.g.: A75CC - Justin; Bakers_Bridge - Kaitlin; 32nd_street - Hillary; etc.
 
-    -   We may decide that the cutoff values are 5 and 10
+    4.  Enter the correct data that you were assigned
 
-    -   All sites which have richness value $\ge$ 10 get a score of 5
+        -   Make sure the site and date combination is correct
 
-    -   All sites which have richness values $<$ 5 and get a score of 1
+    5.  Most of the data you will enter is exactly as it appears on the sheet, but you will need to add the following from the assignment table
 
-    -   Sites with richness values $\ge$ 5 and $<$ 10 will get a score of 3
+        -   Biotype (2 or 1)
 
--   The final index value will be the sum of all metric scores.
+        -   Sample date in proper SI format: YYYY-MM-DD; 2015-10-15
 
--   Sites will be classified based on their total score.
+    6.  Make sure to type the `Taxon` name ***EXACTLY*** as it appears in the original data
 
-# Data
+        -   e.g., Nemouridae\_(not_zapada); Eukiefferiella_gracei; Pteronarcys; etc.
 
--   We will be using the same macroinvertebrate data as before
+    7.  Make sure all the data for your site is entered by the date and time listed on D2L.
 
--   The data comes from 25 25 sites across the Bonita Peak Mining District near Silverton, CO
+        -   **Your colleagues cannot complete the data assignment until all data is entered**
 
--   The sites are located across a gradient of metal contamination
+        -   Late data entry will result in a 50% penalty on your total assignment grade.
 
-    -   Impacted sites have different suites of metals present and in different combinations
-
-    -   Sites are broadly categorized into 'reference', 'light' or 'heavy' impact based on total metal concentrations
-
-    -   Reference sites typically have no metals in them
-
-    -   There are no other known impacts to these sites
-
-    -   Therefore, differences between categories can be mostly attributed to differences in metal concentrations
-
--   The sample collection and data processing steps were identical for all sites in this data set
-
-    -   Hence, the results for each site are directly comparable with each other
+# Part 2: Calculating Colorado's MMI
 
 # Setup
 
