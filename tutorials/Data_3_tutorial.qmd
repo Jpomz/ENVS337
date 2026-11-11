@@ -19,7 +19,8 @@ embed-resources: true
 
 source(here::here("tutorials/Data_3_custom_functions.R"))
 library(tidyverse)
-bp <- read_csv("data/bonita_peak.csv")
+bp <- read_csv(here::here("data/bonita_peak.csv"))
+taxa <- read_csv(here::here("data/MMI_taxa_info.csv"))
 ```
 
 # Tutorial + Assignment
@@ -92,6 +93,8 @@ This data module is made up of three parts
 
 -   You should already have the `bonita_peak.csv` downloaded in your `data/` folder from the first module, but download it again if needed.
 
+-   Dowload the `MMI_taxa_info.csv` sheet from D2L and put it in your `data/` folder
+
 -   You will also need to download the `Data_3_cusom_functions.R` script
 
     -   Put this in your R project, not in the `data/` folder
@@ -110,6 +113,7 @@ This data module is made up of three parts
 source("Data_3_custom_functions.R")
 library(tidyverse)
 bp <- read_csv("data/bonita_peak.csv")
+taxa <- read_csv("data/MMI_taxa_info.csv")
 ```
 
 ```{r}
