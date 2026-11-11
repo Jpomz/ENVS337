@@ -17,28 +17,9 @@ embed-resources: true
 #| include: false
 #| message: false
 
-# source(here::here("tutorials/Data_2_custom_functions.R"))
+source(here::here("tutorials/Data_3_custom_functions.R"))
 library(tidyverse)
-site1 <- readxl::read_excel(here::here("data/MMI_HW_data.xlsx"),
-                    sheet = "A75CC")
-site2 <- readxl::read_excel(here::here("data/MMI_HW_data.xlsx"),
-                    sheet = "A72")
-other_sites <- readxl::read_excel(here::here("data/MMI_HW_data.xlsx"),
-                        sheet = "other_sites")
-taxa_info <- readxl::read_excel(here::here("data/MMI_HW_data.xlsx"),
-                        sheet = "taxa_info")
-
-site_info <- readxl::read_excel(here::here("data/MMI_HW_data.xlsx"),
-                        sheet = "site_info")
-
-sites <- bind_rows(site1, site2, other_sites |>
-                     filter(site_code != "Purple Cliffs"))
-dat <- left_join(sites, taxa_info)
-counts <- dat
-
-purp <- other_sites |>
-  filter(site_code == "Purple Cliffs") |>
-  left_join(taxa_info)
+bp <- read_csv("data/bonita_peak.csv")
 ```
 
 # Tutorial + Assignment
@@ -55,7 +36,7 @@ This data module is made up of three parts
 
 # Background
 
-# Part 1 Data Entry 
+# Part 1 Data Entry
 
 -   Each student is assigned one site-date combination to enter into a shared Google Sheets file
 
@@ -69,7 +50,7 @@ This data module is made up of three parts
 
     3.  Create a new tab and name it with the site code and your name
 
-        -   e.g.: A75CC - Justin; Bakers_Bridge - Kaitlin; 32nd_street - Hillary; etc.
+        -   e.g.: A75CC - Justin; Bakers_Bridge - Vanessa; 32nd_street - Hillary; etc.
 
     4.  Enter the correct data that you were assigned
 
@@ -79,11 +60,17 @@ This data module is made up of three parts
 
         -   Biotype (2 or 1)
 
-        -   Sample date in proper SI format: YYYY-MM-DD; 2015-10-15
+        -   Sample date in proper SI format:
+
+            -   YYYY-MM-DD
+
+            -   2015-10-15
 
     6.  Make sure to type the `Taxon` name ***EXACTLY*** as it appears in the original data
 
         -   e.g., Nemouridae\_(not_zapada); Eukiefferiella_gracei; Pteronarcys; etc.
+        -   Typos or different spellings will make analysis difficult
+        -   You will be responsible for fixing any typos or errors which are discovered
 
     7.  Make sure all the data for your site is entered by the date and time listed on D2L.
 
@@ -93,15 +80,19 @@ This data module is made up of three parts
 
 # Part 2: Calculating Colorado's MMI
 
+## Overview
+
+-   Demonstrate how to calculate CO's MMI using the `bonita_peak` data
+
+-   You will need to repeat this process once all the Las Animas River data is entered
+
 # Setup
 
 ## Download files from D2L
 
 -   You should already have the `bonita_peak.csv` downloaded in your `data/` folder from the first module, but download it again if needed.
 
--   You will also need to download the `site_categories_training.csv` and put it in your `data/` folder
-
--   Finally, you will need to download the `Data_2_cusom_functions.R` script
+-   You will also need to download the `Data_3_cusom_functions.R` script
 
     -   Put this in your R project, not in the `data/` folder
 
@@ -116,244 +107,41 @@ This data module is made up of three parts
 ```{r}
 #| eval: false
 #| 
-source("Data_2_custom_functions.R")
+source("Data_3_custom_functions.R")
 library(tidyverse)
 bp <- read_csv("data/bonita_peak.csv")
-categories <- read_csv("data/site_categories_training.csv")
-
-# set levels
-categories <- categories |>
-  mutate(site_category = factor(
-    site_category,
-    levels = c("reference",
-               "light",
-               "heavy",
-               "test")))
-
 ```
-
-## Join `bp` data with `categories`
-
--   The `categories` object has the impact category for each site
-
-    -   20 of the sites have known categories
-
-    -   5 of the sites are unknown and have the category of "test"
-
--   We will join these two objects together before continuing.
 
 ```{r}
-bp_cat <- bp |>
-  left_join(categories) 
-bp_cat
-dim(bp_cat)
-# full dat = 486 rows
-```
+bp <- read_csv(here::here("data/bonita_peak.csv"))
+taxa <- read_csv("data/MMI_taxa_info.csv")
+names(dat)
+names(bp)
+colnames(bp) <- str_to_sentence(colnames(bp))
+# left_join(bp, taxa) |>
+#   filter(is.na(Bio_1_sensitive)) |>
+#   distinct(Taxon) |>
+#   arrange(Taxon) |> 
+#   View()
 
-## Split data into training and test objects
+bp <- left_join(bp, taxa) #|>
+  # na.omit()
+names(bp)
+(mmi_metrics <- calc_bio2_metrics(dat))
+bio2_mmi(mmi_metrics)
 
--   We will split this data into a "training" set to develop our index and a "test" set to see how well our index works
-
-```{r}
-test <- bp_cat |>
-  filter(site_category == "test")
-test
-dim(test)
-train <- bp_cat |>
-  filter(site_category != "test")
-train
-dim(train)
-
-# 111 + 375 = 486 (full dat)
-```
-
-# Develop Index with `train` data
-
--   The script that you downloaded and loaded above contains custom functions
-
--   The first we will use is called `calc_metrics()`
-
--   This function takes a data frame and calculates individual biomonitoring metrics for each site
-
--   This is similar to what you did in module 1, but the function calculates all of them at once
-
--   The candidate metrics are as follows:
-
-    -   `tot_rich` = Total taxonomic richness
-    -   `ept_rich` = EPT taxonomic richness
-    -   `e_rich` = Ephemeroptera taxonomic richness
-    -   `p_rich` = Plecoptera taxonomic richness
-    -   `t_rich` = Trichoptera taxonomic richness
-    -   `hept_rich` = Ephemeroptera::Heptageniidae taxonomic richness
-    -   `rhya_rich` = Trichoptera::Rhyacophilidae taxonomic richness
-    -   `pred_rich` = FFG::Predator Richness
-    -   `scraper_rich` = FFG::Scraper Richness
-    -   `shannon` = Shannon Diversity Index
-    -   `pct_chiro` = Percent Diptera::Chironomidae individuals
-    -   `pct_ept` = Percent EPT Individuals
-
--   In the next step, we will calculate all metrics together and plot the results
-
--   You will then be tasked with choosing which metrics to use to for our index
-
-## Calculate all metrics
-
-```{r}
-metric_df <- calc_metrics(train)
-metric_df
-```
-
-## Plot all metrics
-
-```{r}
-plot_metrics(metric_df)
-```
-
-## Choose metrics
-
-### Discuss the following at your table
-
-1.  Which metrics show clear separation among the three categories?
-    1.  You may want to calculate means for individual metrics (see below)
-2.  Which metrics overlap a lot?
-3.  Which metrics go *down* with impact, and which go *up*?
-4.  Are any metrics doing something unexpected? What might explain it?
-5.  Choose 4 metrics to use to calculate an index. Do they increase or decrease with more impact?
-
-### Means for individual metrics
-
--   Let's look at the means for `pct_chiro` to see if they are different enough to separate the categories
-
-```{r}
-metric_df |>
-  group_by(impact) |>
-  summarize(mean(pct_chiro))
-```
-
--   For other metrics, change `pct_chiro` to the name of the metric you want to explore
-
-## Scoring sites
-
--   Choose 4 metrics for your index
-
--   Make sure the names match exactly
-
-    -   run `names(metric_df)` if you need a refresher
-
-```{r}
-metrics <- c("tot_rich", "ept_rich", "p_rich", "pred_rich")
-```
-
-### Define cutoff values
-
--   See where the mean metric value for reference, light, and heavy categories are
-
-```{r}
-#| message: false
-metric_df |>
-  pivot_longer(all_of(metrics)) |>
-  group_by(name, impact)|>
-  summarize(mean(value))
-```
-
-### Discuss the following at your table
-
-1.  Which values should you use to define the cutoff between each category?
-    1.  The mean value at that category?
-        1.  for `ept_rich` this would be 14.6 and 4.7
-    2.  Half the difference between the categories?
-        1.  for `ept_rich` this would be \~13 and 8.1
-2.  Complete the following table with your metric names and your value cutoffs
-
-```{r}
-scoring <- tribble(
-  ~metric,        ~direction,  ~lower, ~upper,
-  'ept_rich',     'decrease',  10,     15, 
-  'p_rich',       'decrease',  5,      6, 
-  'pred_rich',    'decrease',  5,      6, 
-  'rich',         'decrease',  20,     25,   
-)
-```
-
-## Estimate the site-level index
-
--   run the custom function `score_sites()`
-
--   This function requires the `metric_df`, the `metrics`, and the `scoring` objects
-
-```{r}
-index_values <- score_sites(metric_df, metrics, scoring)
-index_values
-```
-
--   Add back in the known categories
-
-```{r}
-index_values <- score_sites(metric_df, metrics, scoring)|>
-  left_join(categories)
-index_values |>
-  arrange(index)
-```
-
--   Calculate the average index value across the site categories
-
--   Plot index values and site categories
-
-```{r}
-index_values |>
-  group_by(site_category) |>
-  summarize(mean(index))
-
-index_values |>
-  ggplot(aes(x = site_category,
-             y = index,
-             fill = site_category)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.1, alpha = 0.7) +
-  labs(x = 'Known impact category', y = 'Index score')
-```
-
-## Classify the sites
-
--   We will now define what index values are classified as reference, light, or heavy impacts
-
-```{r}
-ref_min   <- 12   # index at or above this is predicted 'reference'
-light_min <- 5   # index below this is 'heavy' index between the two is 'light'
+(bp_metrics <- calc_bio2_metrics(bp, Site_id))
+names(mmi_metrics)
+names(bp_metrics)
+(bp_mmi <- bio2_mmi(bp_metrics, Site_id))
+ggplot(bp_mmi, 
+       aes(x = Site_id, 
+           y = mmi_score)) +
+  geom_col() +
+  geom_hline(aes(yintercept = 48))+
+  geom_hline(aes(yintercept = 40))
 
 ```
-
--   Now use the `classify_index()` custom function to predict what the site category is
-
-```{r}
-index_categories <- index_values |>
-  mutate(predicted = classify_index(index))
-```
-
--   View and plot the predicted categories based on the known categories
-
-```{r}
-index_categories |> 
-  arrange(index, site_category)
-
-ggplot(index_categories, aes(x = site_category, y = index)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.1, alpha = 0.7) +
-  labs(x = 'Known impact category', y = 'Index score') +
-  theme_bw()
-
-# How often does the predicted category match the known category?
-table(known = index_categories$site_category,
-      predicted = index_categories$predicted)
-```
-
-## Discuss the following at your table
-
-1.  How many sites did the index classify correctly? Which sites did it get wrong?
-
-2.  For a missclassified site, look at its individual metric scores. Which metric pulled it in the wrong direction?
-
-3.  This index was built *and* tested on the same sites. Why might it perform worse on new sites?
 
 # Homework: Classify the "test" sites
 
