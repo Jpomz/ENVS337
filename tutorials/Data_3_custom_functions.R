@@ -19,7 +19,7 @@ library(ggplot2)
 theme_set(theme_bw())
 
 # Set the session global for discrete fills (e.g., bars, boxplots)
-options(ggplot2.discrete.fill = function() scale_fill_brewer(palette = "RdYlBu", direction = -1))
+options(ggplot2.discrete.fill = function() scale_fill_manual(values = c( "steelblue", "darkorange", "red4", "magenta4")))
 
 # custom functions ####
 
@@ -36,6 +36,7 @@ options(ggplot2.discrete.fill = function() scale_fill_brewer(palette = "RdYlBu",
 # This function returns a wide data frame with metric calculations
 calc_bio2_metrics <- function(counts, group_column = site_code) {
   counts |>
+    group_by(Sample_date, {{group_column}}) |>
     summarise(
       # impact = unique(site_category),
       TotalTax     = n_distinct(Taxon),
@@ -47,8 +48,8 @@ calc_bio2_metrics <- function(counts, group_column = site_code) {
         sum(Count[Bio_2_sensitive == TRUE | Bio_1_sensitive == TRUE]) / sum(Count), 
       PredTaxFAC = n_distinct(Taxon[FFG %in% c('predator')]),
       ScrapPctFAC = 100 * 
-        sum(Count[FFG %in% c("scraper")]) / sum(Count),
-      .by = {{group_column}}
+        sum(Count[FFG %in% c("scraper")]) / sum(Count)#,
+      #.by = c(Sample_date, {{group_column}})
     )
 }
 
@@ -63,11 +64,12 @@ bio2_mmi <- function(metrics, group_column = site_code){
            PredTaxFAC = 100 * PredTaxFAC / 13,
            ScrapPctFAC = 100 * ScrapPctFAC / 44.2,
            mmi_score = rowMeans(pick(TotalTax:ScrapPctFAC), na.rm = TRUE)) |>
-    select({{group_column}}, mmi_score)
+    select({{group_column}}, Sample_date, mmi_score)
 }
 
 calc_bio1_metrics <- function(counts) {
   counts |>
+    group_by(Sample_date, {{group_column}}) |>
     summarise(
       # impact = unique(site_category),
       aEPTTax = n_distinct(Taxon[Order %in% c('Ephemeroptera','Plecoptera', 'Trichoptera')]),
@@ -93,7 +95,7 @@ bio1_mmi <- function(metrics){
             ClngrTax= 100 *ClngrTax  / 20.8,
             PredShrTaxFac= 100 *PredShrTaxFac  / 14,
            mmi_score = rowMeans(pick(aEPTTax:PredShrTaxFac), na.rm = TRUE)) |>
-    select(site_code, mmi_score)
+    select({{group_column}}, Sample_date, mmi_score)
 }
 
 

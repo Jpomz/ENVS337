@@ -21,6 +21,18 @@ source(here::here("tutorials/Data_3_custom_functions.R"))
 library(tidyverse)
 bp <- read_csv(here::here("data/bonita_peak.csv"))
 taxa <- read_csv(here::here("data/MMI_taxa_info.csv"))
+bp_categories <- read_csv(here::here("data/site_categories_training.csv")) |>
+  mutate(site_category = factor(
+    site_category,
+    levels = c("reference",
+               "light",
+               "heavy",
+               "test")))
+animas_categories <- read_csv(here::here("data/las_animas_categories.csv")) |>
+  mutate(site_category = factor(
+    site_category,
+    levels = c("reference",
+               "impacted")))
 ```
 
 # Tutorial + Assignment
@@ -31,49 +43,145 @@ taxa <- read_csv(here::here("data/MMI_taxa_info.csv"))
 
 This data module is made up of three parts
 
-1.  Entering data from the Animas River spill into a shared Google Sheets file
+1.  Entering data from the Las Animas River spill into a shared Google Sheets file
 2.  Example of Colorado's MMI on the Bonita Peak data
 3.  Calculating simple metrics and Colorado's MMI Score on the Animas River data
 
-# Background
+# Background - Las Animas River Spill
+
+-   On August 5th, 2015, EPA contractors accidentally destroyed a plug holding contaminated water in tunnels of the Gold King Mine
+
+-   Released \~3m US Gallons Wastewater
+
+    -   pH \~ 3
+
+    -   contained heavy metals inclusing Cd, Pb, As, Zn, Fe, Cu, Be
+
+-   Water in Durango, CO contaminated From \~Aug 5th to 10th
+
+    -   Acute exposure
+
+    -   Very high concentrations for a relatively short time
+
+-   Contaminated flood pulse reached Lake Powell Aug 14th.
+
+-   UT Division of Water Quality determined dilution at this point sufficient
+
+# Las Animas Data
+
+-   [Mountain Studies Institute](https://www.mountainstudies.org/) conducted a sampling effort immediately after the spill.
+
+-   Limited longitudinal sampling of the Las Animas above (A68, reference) and below the spill (A72, impacted)
+
+    -   Reference and impacted sample is separated in space
+
+        -   Prediction: Negative effects of the spill will be detected when comparing samples taken above and below the release location.
+
+    -   Repeat samples were taken 2-7 days and 6-8 weeks afterwards
+
+        -   Prediction: Negative effects will diminish through time and the community will show signs of recovery (compare results from first sample date collection to results of later dates).
+
+-   Some sites near Durango were able to be sampled *before* the contamination arrived
+
+    -   Reference and impacted samples are separated through time.
+
+        -   Prediction: The community will show negative effects when comparing samples before and immediately after the spill.
+
+    -   Repeat samples were taken 2-7 days and 6-8 weeks afterwards
+
+        -   Prediction: Negative effects will lessen through time and show signs of recovery in later samples.
+
+-   Samples were also collected longitudinally 6-8 weeks after the spill.
+
+    -   Paired samples were collected along the main stem of the Las Animas (impacted) as well as along tributaries (unimpacted)
+
+    -   Test for the effects of dilution
+
+        -   Prediction: Impacts will be strongest up stream, and decrease as more tributaries come in and dilute the contamination
+
+| Site Name                | Before spill | \~24h post spill | \~1 week post spill | 6-8 weeks post spill | Impact category |
+|------------|------------|------------|------------|------------|------------|
+| A55 - Howardsville       |              |                  |                     | 2015-09-23           | Reference       |
+| A60 - Below Arrastra     |              |                  |                     | 2015-09-23           | Reference       |
+| A68 - Above Cement       |              | 2015-08-08       | 2015-08-12          | 2015-09-23           | Reference       |
+| A72 - Below Silverton    |              | 2015-08-08       | 2015-08-12          | 2015-09-23           | Impacted        |
+| A73 - Above Elk          |              |                  |                     | 2015-10-15           | Impacted        |
+| A73EC - Elk Creek (trib) |              |                  |                     | 2015-10-15           | Reference       |
+| A75D - Above Cascade     |              |                  |                     | 2015-10-15           | Impacted        |
+| A75CC - Cascade (trib)   |              |                  |                     | 2015-10-15           | Reference       |
+| Baker's Bridge           |              |                  |                     | 2015-09-21           | Impacted        |
+| James Ranch              |              |                  |                     | 2015-09-21           | Impacted        |
+| Oxbow Park               |              |                  |                     | 2015-09-18           | Impacted        |
+| 32nd Street              | 2015-08-06   | 2015-08-07       | 2015-08-13          | 2015-09-22           | Depends on date |
+| Rotary Park              | 2015-08-06   | 2015-08-07       | 2015-08-13          | 2015-09-20           | Depends on date |
+| Above Lightner           |              |                  |                     | 2015-09-20           | Impacted        |
+| Purple Cliffs            |              |                  |                     | 2015-09-22           | Impacted        |
+
+: Table 1. Sample names ordered from up- to downstream. All sites are located on the main stem of the Las Animas River unless indicated as a tributary in parentheses. Sample dates are given with their time relative to the spill arrival at that site. The predicted impact category is listed. See also Figure 1. which is a map of the sample locations.
+
+![Figure 1. Map showing sample locations assessing impacts of the Gold King Mine spill. The Las Animas River above the spill, as well as downstream tributaries, are indicated in Green (assumed no impact). The spill followed Cement Creek which is indicated in Orange. Sites downstream of the confluence with Cement Creek are indicated in Pink (assumed to be impacted, depending on sample date).](las-animas-map.png)
 
 # Part 1 Data Entry
 
 -   Each student is assigned one site-date combination to enter into a shared Google Sheets file
 
     -   See D2L for your assignment, all the data, and the Google link which is current to this semester's course
+    -   The entry assignment can be found in the "Data_entry_student_assignments" table
+    -   All the data is in the "Data_to_enter" pdf
 
 -   I will demonstrate how to enter the data in class, but keep the following in mind
 
-    1.  Open the Google Sheets link
+    1.  Open the Google Sheets link on D2L
+
+        -   Make sure it opens in a new tab: do **not** enter data in the D2L window
 
     2.  Copy the information from the `Template` tab
 
-    3.  Create a new tab and name it with the site code and your name
+    3.  Create a new tab and name it with the site code and your name, e.g.:
 
-        -   e.g.: A75CC - Justin; Bakers_Bridge - Vanessa; 32nd_street - Hillary; etc.
+        -   A75CC - Justin
 
-    4.  Enter the correct data that you were assigned
+        -   Bakers_Bridge - Vanessa
 
-        -   Make sure the site and date combination is correct
+        -   32nd_street - Hillary
 
-    5.  Most of the data you will enter is exactly as it appears on the sheet, but you will need to add the following from the assignment table
+        -   etc.
+
+    4.  Make sure your site_code matches exactly what is in the assignment table
+
+        -   Good: James_ranch
+
+        -   **NOT GOOD:** jame's ranch, James Ranch; jame's-ranch; etc.
+
+    5.  Enter the correct data that you were assigned
+
+        -   Look through the "Data_to_enter" document
+        -   Scroll down to find the table with your site code/name on it
+        -   Make sure the **site and date** combination is correct
+
+    6.  Most of the data you will enter is exactly as it appears on the sheet, but you will need to add the following from the assignment table
 
         -   Biotype (2 or 1)
 
-        -   Sample date in proper SI format:
+        -   Sample date in proper SI format, separated with a - :
 
             -   YYYY-MM-DD
 
             -   2015-10-15
 
-    6.  Make sure to type the `Taxon` name ***EXACTLY*** as it appears in the original data
+        -   Sample month needs to be entered as two digits
+
+            -   **Correct**: 08, 09, 10
+
+            -   **Incorrect:** 8, 9
+
+    7.  Type the `Taxon` name ***EXACTLY*** as it appears in the original data
 
         -   e.g., Nemouridae\_(not_zapada); Eukiefferiella_gracei; Pteronarcys; etc.
         -   Typos or different spellings will make analysis difficult
         -   You will be responsible for fixing any typos or errors which are discovered
 
-    7.  Make sure all the data for your site is entered by the date and time listed on D2L.
+    8.  All the data for your site-date combination needs to entered by the date and time listed on D2L.
 
         -   **Your colleagues cannot complete the data assignment until all data is entered**
 
@@ -87,17 +195,23 @@ This data module is made up of three parts
 
 -   You will need to repeat this process once all the Las Animas River data is entered
 
+-   Note that some steps below only pertain to the `bonita_peak` data and do not need to be performed on the Las Animas data
+
+    -   I have tried to make this as clear as possible below.
+
 # Setup
 
 ## Download files from D2L
 
 -   You should already have the `bonita_peak.csv` downloaded in your `data/` folder from the first module, but download it again if needed.
 
--   Dowload the `MMI_taxa_info.csv` sheet from D2L and put it in your `data/` folder
+-   Download the `MMI_taxa_info.csv` sheet from D2L and put it in your `data/` folder
+
+-   Download the `las_animas_categories.csv` sheet from D2L and put it in your `data/` folder
 
 -   You will also need to download the `Data_3_cusom_functions.R` script
 
-    -   Put this in your R project, not in the `data/` folder
+    -   Put this in your R project, **not** in the `data/` folder
 
 ## Load Libraries and data
 
@@ -114,91 +228,348 @@ source("Data_3_custom_functions.R")
 library(tidyverse)
 bp <- read_csv("data/bonita_peak.csv")
 taxa <- read_csv("data/MMI_taxa_info.csv")
+bp_categories <- read_csv("data/site_categories_training.csv") |>
+  mutate(site_category = factor(
+    site_category,
+    levels = c("reference",
+               "light",
+               "heavy",
+               "test")))
+animas_categories <- read_csv("data/las_animas_categories.csv") |>
+  mutate(site_category = factor(
+    site_category,
+    levels = c("reference",
+               "impacted")))
 ```
 
+-   View the data objects
+
 ```{r}
-bp <- read_csv(here::here("data/bonita_peak.csv"))
-taxa <- read_csv("data/MMI_taxa_info.csv")
-names(dat)
-names(bp)
+head(bp)
+head(taxa)
+```
+
+## Modify `bp` data
+
+-   The following step is required to get the `bp` object into the same format as the Las Animas data that you will enter
+
+-   You will **not** repeat the next step for your assignment.
+
+```{r}
 colnames(bp) <- str_to_sentence(colnames(bp))
-# left_join(bp, taxa) |>
-#   filter(is.na(Bio_1_sensitive)) |>
-#   distinct(Taxon) |>
-#   arrange(Taxon) |> 
-#   View()
+bp$Biotype <- 2
+bp$Sample_date <- "2016-10-17"
+head(bp)
 
-bp <- left_join(bp, taxa) #|>
-  # na.omit()
-names(bp)
-(mmi_metrics <- calc_bio2_metrics(dat))
-bio2_mmi(mmi_metrics)
+colnames(bp_categories) <- str_to_sentence(colnames(bp_categories))
+head(bp_categories)
+```
 
-(bp_metrics <- calc_bio2_metrics(bp, Site_id))
-names(mmi_metrics)
-names(bp_metrics)
-(bp_mmi <- bio2_mmi(bp_metrics, Site_id))
+## Calculate CO's MMI
+
+-   You will perform the following steps for your homework assignment.
+
+-   Join the `taxa` information to the `bp` data
+
+```{r}
+bp <- inner_join(bp, taxa) 
+head(bp)
+```
+
+-   Calculate the individual metrics of the MMI
+
+::: callout-note
+-   Note that the `bp` data only has Biotype 2 so we can apply this to the full object.
+
+-   The Las Animas River data has sites in Biotype 1 and in Biotype 2
+
+-   You will need to separate the
+
+-   For Biotype 1, there are associated custom functions for these and they are named:
+
+    -   `calc_bio1_metrics()`
+
+    -   `bio1_mmi()`
+:::
+
+```{r}
+bp_metrics <- calc_bio2_metrics(bp, group_column = Site_id)
+head(bp_metrics)
+```
+
+-   Calculate the total score for the Biotype 2 sites
+
+```{r}
+bp_mmi <- bio2_mmi(bp_metrics, Site_id)
+bp_mmi
+```
+
+-   Join the data with the "known" impact categories for the Bonita Peak data
+
+```{r}
+bp_mmi <- left_join(bp_mmi, bp_categories)
+bp_mmi
+
+```
+
+-   Plot the scores along with the cutoff values
+
+```{r}
 ggplot(bp_mmi, 
        aes(x = Site_id, 
+           y = mmi_score,
+           fill = Site_category)) +
+  geom_col() +
+  geom_hline(aes(yintercept = 48))+
+  geom_hline(aes(yintercept = 40))
+```
+
+::: callout-note
+-   Note that Biotype 1 has different cutoff values:
+
+    -   44 and 35
+
+-   You will need to change the values in the `yintercept =` argument in both `geom_hline()` calls above when plotting the results for your biotype 1 sites.
+:::
+
+# Part 3: Homework
+
+Calculate simple metrics and MMI scores for the Las Animas River Data.
+
+## Overview
+
+1.  Load the data from the shared Google Sheets
+2.  Cut the data into different pieces based on hypotheses
+3.  Calculate simple metrics for longitudinal data
+4.  Calculate MMI scores for Biotype 1 and 2 as appropriate
+5.  Recombine results to answer specific predictions
+
+## Download data from Google Sheets
+
+-   install the `googlesheets4` package by running the following in your console
+
+    -   **NOTE**: do **NOT** put this in your script, just run it once in your console
+
+    -   `install.packages(googlesheets4)`
+
+-   Load the library and prepare the session
+
+```{r}
+library(googlesheets4)
+# prep the session
+gs4_deauth()
+```
+
+-   copy the sheet URL
+
+    -   Probably easiest to copy from the link on D2L
+
+```{r}
+# this is the link for FA2026
+# MAke sure it's updated for future classes
+sheet_url <- "https://docs.google.com/spreadsheets/d/1wXRXqfBh6_ZDQVxkUaPT4DmoNSPi477qVDyDgnktajs/edit?usp=sharing/"
+
+sheet_names <- sheet_names(sheet_url)
+sheet_names <- sheet_names[sheet_names != "Template"]
+sheet_names
+```
+
+-   read in data stored in Google Sheet
+
+```{r}
+animas_data <- map_dfr(sheet_names, function(tab) {
+  read_sheet(sheet_url,
+             sheet = tab,
+             col_types = "cicdDdc")  # tag rows with source tab
+  # c = character
+  # i = integer
+  # d = double
+  # D = date
+})
+animas_data
+```
+
+### Load other data objects
+
+-   Make sure that the `taxa` and `animas_categories` objects are loaded.
+
+### Join `taxa` info to `animas_data`
+
+```{r}
+animas_data <- inner_join(animas_data, taxa)
+```
+
+## Cut data into different pieces for separate analyses
+
+-   You will be testing two primary hypotheses
+
+    1.  The negative effects of contamination varied through time
+
+    2.  The negative effects of contamination varied across space.
+
+-   For hypothesis 1, there are 4 sites (`A68`, `A72`, `32nd_Street` and `Rotary_Park`) which were sampled through time for a total of 14 samples.
+
+-   For hypothesis 2, all 15 sites were sampled 6-8 weeks after the spill in September or October (`Sample_month` = `09` or `10`)
+
+### Data for hypothesis 1
+
+-   Because all the data is not yet entered, the following code will not modify our `animas_data` object
+
+-   However, you should be able to copy/paste and run the following code to set up your analysis
+
+```{r}
+#| eval: false
+hypo1 <- animas_data |>
+  filter(Site_code %in% c("A68", "A72", "32nd_Street", "Rotary_Park"))
+# split based on biotype
+hypo1_bio1 <- hypo1 |>
+  filter(Biotype == 1)
+hypo1_bio2 <- hypo1 |>
+  filter(Biotype == 2)
+```
+
+### Data for hypothesis 2
+
+-   As above, once all the data is entered, you should be able to copy/paste and run the following code to set up your analysis
+
+```{r}
+#| eval: true
+hypo2 <- animas_data |>
+  filter(Sample_month_mm == 09 |
+           Sample_month_mm == 10)
+# split based on biotype
+hypo2_bio1 <- hypo2 |>
+  filter(Biotype == 1)
+hypo2_bio2 <- hypo2 |>
+  filter(Biotype == 2)
+```
+
+## Calculate simple metrics
+
+-   Calculate three simple metrics of your choice for the `hypo2` data and make a plot for each result
+
+-   You will only do this on the data for `hypo2` since they were all collected around the same time and simple metrics don't rely on biotype
+
+-   See Data Module 1 for examples of metrics
+
+```{=html}
+<!-- -->
+```
+-   the `calc_metrics()` function from data module 2 is not set up to work on the Animas River Data
+
+-   You will need to calculate the metrics of your choice "manually"
+
+```{=html}
+<!-- -->
+```
+-   Here, I will calculate one example to show you how to make a plot of the result.
+
+-   Your write up can include this if you want, but you will need to calculate three other metrics of your choice.
+
+```{r}
+metric_example <- hypo2 |>
+  distinct(site_code, Sample_date, Taxon) |>   
+  group_by(site_code, Sample_date) |>   
+  summarize(total_rich = n())
+metric_example
+```
+
+-   Join the categories and plot
+
+```{r}
+metric_example <- metric_example |>
+  left_join(animas_categories) 
+
+ggplot(metric_example,
+       aes(x = distance,
+           fill = site_category,
+           y = total_rich)) +
+  geom_col()
+```
+
+## 
+
+## Calculate MMI
+
+-   Calculate the MMI scores for all 4 data objects
+
+-   The following code is an example for 1 of the objects
+
+-   You will need to repeat this and modify as needed for the other 3 objects
+
+    -   Make sure to give each a unique name
+
+    -   Use the appropriate functions
+
+```{r}
+# calculate MMI metrics
+hypo2_bio2_metrics <- calc_bio2_metrics(hypo2_bio2,
+                                        group_column = site_code)
+head(hypo2_bio2_metrics)
+# calculate MMI score
+hypo2_bio2_mmi <- bio2_mmi(hypo2_bio2_metrics, site_code)
+hypo2_bio2_mmi
+```
+
+-   Join the mmi results to the site information and make plots
+
+```{r}
+hypo2_bio2_mmi |>
+  left_join(animas_categories) |>
+  ggplot(aes(x = distance,
+           fill = site_category,
            y = mmi_score)) +
   geom_col() +
   geom_hline(aes(yintercept = 48))+
   geom_hline(aes(yintercept = 40))
-
 ```
-
-# Homework: Classify the "test" sites
-
-1.  Calculate all metrics for the `test` object
-    1.  use the `calc_metrics()` function
-2.  Score sites using the metric and index values your table developed
-    1.  use the `score_sites()` function
-3.  Classify the sites
-    1.  use the `classify_index()` function inside of a `mutate()` function as above
-4.  Compare your classification with known categories (revealed below)
-5.  Complete write up assignment below
-6.  Submit the following documents on D2L
-    1.  Your R script with all your calculations
-    2.  Your write up as a .pdf or word document
-
-```{r}
-test_metrics <- calc_metrics(test)
-test_metrics |>
-  select(site_id, all_of(metrics))
-test_score <- score_sites(test_metrics, metrics, scoring)
-test_score |>
-  mutate(predicted = classify_index(index))
-```
-
-## Test site categories
-
--   The following table shows the known categories of your test site
-
-::: {#my-table-container style="max-width: 50%; margin: auto;"}
-| Site ID | Known Category |
-|:-------:|:--------------:|
-|  MaMIL  |     heavy      |
-| NFAaBU  |     light      |
-|  MAGaA  |   reference    |
-|  MFMaM  |     heavy      |
-| BUaNFA  |     heavy      |
-
-: Test sites with known impact category. {#tbl-sales .table-striped .table-hover .table-sm }
-:::
 
 ## Write up
 
 -   Complete the following in a word document and submit on D2L
 
-1.  List out the metrics you selected, and the high and low cutoff for each e.g., your `scoring` table. Briefly describe what each metric is telling us about a site (regardless of how well your index performed).
-2.  Make a table which has the Site ID, your predicted classification, and the known site category. Below that, summarize how well the index predicted site classifications. How many did it predict correctly? Were certain categories predicted more or less accurately? Based on the number of test sites (and number per category), how confident are you in this interpretation.
-3.  For any site the index got wrong, which metric or metrics misled it, and why might that have happened? (You may need to view the individual metric calculations for your test sites).
-4.  List at least two limitations of an index built from this set of sites (think about how many sites were used, how the categories were assigned, how the cutoffs were chosen, etc.).
-5.  If you could change one thing about the index (a metric, a cutoff, or the data used to build it), what would it be and why?
-6.  Pick a metric score you expected to be high at a reference site but was actually low (or vice versa: a metric you expected to be low at a heavy impact site, but was actually high). Which metric was it? List at least two possible explanations for it that have nothing to do with pollution (e.g., habitat, substrate, flow, season, elevation, dispersal, sampling).
-7.  The absence of a taxon from a sample does not prove it is absent from the stream. What does this mean for metrics like richness and EPT richness? Does this help explain any of the "surprises" you found in your index classifications?
-8.  The site categories (reference, light, heavy) are a simplification and based on "overall metal contamination". However, metals can interact with another and be additive (sum of the two effects), synergistic (greater than the sum of the two effects), or antagonistic (less than the sum of the two effects). How can this complicate using a single index to classify sites?
-9.  A "light impact" site is more similar to a gradient than a discrete category. Where would you expect an index to perform best (reference vs. heavy) and worst (reference vs. light, or light vs. heavy)? Does your classification table support that?
-10. Suppose a site was classified as "reference" by the index but a land manager says there is a known upstream impact. Whom do you believe, and what additional data would you collect to resolve the disagreement?
-11. Reflect on the challenges posed by creating a biotic index to classify stream condition. What are the pros and cons of using an index versus multiple single metrics?
-12. A watershed group asks you to analyze data from a new test site they think is contaminated with heavy metals in this same area of Colorado. How would you analyze it? Would you use the index you developed here, or would you use individual scores from one or more metrics? Explain which you would do, and if you choose individual metrics, name which ones specifically and explain why you would use those.
+### Simple Metrics
+
+1.  List out the simple metrics you calculated for the `hypo2` data.
+2.  Include a plot for each metric.
+    -   Put `distance` on the x-axis and `site_category` as the fill
+3.  Fully interpret what you found with these metrics. Are there any patterns moving from up- to downstream? (Recall that there are two tributaries in the data as well.) Are there consistencies within or across metrics? In other words, did one or all metrics accurately follow the known impact categories? e.g., was one metric always high/low in reference/impacted streams?
+
+### Hypothesis 1 - time
+
+1.  Make two plots for the results for hypothesis 1.
+    -   One plot is for biotype 1
+    -   One plot is for biotype 2
+    -   For both plots, put `Sample_date` on the x axis.
+    -   Put the appropriate thresholds for biotype 1/2 on the correct plot
+2.  Fully interpret these results.
+    -    Remember that biotype 1 sites had samples before (reference) and after (impacted) the spill.
+        -   Are there any patterns that you notice?
+        -   What can you say about the prediction that negative effects will be seen, but they will improve through time?
+    -   Biotype 2 sites for this subset only had samples after the spill, but they were collected above (reference) and below (impacted) the confluence.
+        -   Are there any patterns that you notice?
+        -   What can you say about the prediction that negative effects will be seen, but they will improve through time?
+
+### Hypothesis 2 - space
+
+1.  Make two plots for the results for hypothesis 2.
+    -   One plot is for biotype 1
+    -   One plot is for biotype 2
+    -   For both plots, put `distance` on the x axis.
+        -   Recall that there are two tributaries in this data
+        -   The tributaries are listed in the downstream order near their paired sites on the main stem
+        -   They should be listed as "reference" sites
+    -   Put the appropriate thresholds for biotype 1/2 on the correct plot
+2.  Fully interpret the results presented in both plots.
+    -   Are there any patterns that you notice?
+    -   What can you say about the prediction that negative effects will be seen near the confluence, but they will improve as you move downstream?
+
+### Synthesis
+
+1.  Overall, what do you think these results mean? What was the impact of the Gold King Mine spill through space and time.
+2.  Do these results surprise you, or were they what you expected?
+3.  Recall that the MMI is designed to broadly assess quality for "aquatic life", but is not overly sensitive to any specific stressors. How does this change how you would interpret or discuss these results? What information would you want to include when discussing these results with someone unfamiliar with Colorado's MMI?
+
+### Final thoughts 
+
+Feel free to share any other thoughts you have about this data, these results, the MMI, etc.
